@@ -72,8 +72,7 @@ class PurePursuit:
     def __init__(self):
         self.L = 3
         self.k = 0.1  # 0.1~1
-        self.Lfc = 4  # 5~15
-        self.KPH_TO_MPS = 1/3.6
+        self.Lfc = 6  
     def euc_distance(self, pt1, pt2):
         return norm([pt2[0] - pt1[0], pt2[1] - pt1[1]])
 
@@ -84,13 +83,12 @@ class PurePursuit:
         x_local = dx * cos(-yaw) - dy * sin(-yaw)
         y_local = dx * sin(-yaw) + dy * cos(-yaw)
 
-        return x_local, y_local
-
+        return x_local, y_local 
 
     def run(self, vEgo, target_point, position, yaw):
-        lfd = self.Lfc + self.k * vEgo * self.KPH_TO_MPS
-        lfd = np.clip(lfd, 4, 60)
-
+        lfd = self.Lfc + self.k * vEgo
+        lfd = np.clip(lfd, 3, 60)
+        rospy.loginfo(f"Lfd: {lfd}")
         x_local , y_local = self.global_to_local(target_point,position, yaw)
         diff = np.sqrt(x_local**2 + y_local**2)
         
@@ -129,15 +127,18 @@ class Start:
         self.local_path_sub = rospy.Subscriber('/ego_waypoint', Marker, self.local_cb)
         self.global_gps_sub = rospy.Subscriber('/current_global_waypoint', Marker, self.global_cb)
         self.pose_sub = rospy.Subscriber('/ego_pos', PoseStamped, self.pose_cb)
-        self.vel_sub = rospy.Subscriber('/vehicle/curr_v', Float32, self.vel_cb)
+        # self.vel_sub = rospy.Subscriber('/vehicle/curr_v', Float32, self.vel_cb)
         self.gps_pos_sub = rospy.Subscriber('/gps_ego_pose',Point,self.gps_pos_cb)
         # self.odom_sub = rospy.Subscriber('/novatel/oem7/odom', Odometry, self.odom_cb,queue_size=20)
         self.start_flag_sub = rospy.Subscriber('/start_flag',Bool, self.flag_cb)
         self.point_sub = rospy.Subscriber('/last_target_point', Marker, self.point_callback)
         self.gps_sub = rospy.Subscriber('/novatel/oem7/bestgnsspos', BESTGNSSPOS, self.bestgps_cb)
         self.yaw_sub = rospy.Subscriber('/vehicle/yaw_rate_sensor',Float32,self.yaw_cb)
+        self.rl_sub = rospy.Subscriber('/vehicle/velocity_RL', Float32, self.rl_callback)
+        self.rr_sub = rospy.Subscriber('/vehicle/velocity_RR', Float32, self.rr_callback)
         self.actuator_pub = rospy.Publisher('/target_actuator', Vector3, queue_size=10)
         self.light_pub = rospy.Publisher('vehicle/left_signal', Float32, queue_size =10)
+        self.global_odom_pub = rospy.Publisher('/global_odom_frame_point',Marker,queue_size=10)
 
         self.curr_v = 0
         self.pose = PoseStamped()
@@ -155,12 +156,21 @@ class Start:
         self.yaw_rate = None
         self.is_start = False
 
-        self.moving_average_window = 10  
+        self.moving_average_window = 1  
         self.point_history_x = deque(maxlen=self.moving_average_window)
         self.point_history_y = deque(maxlen=self.moving_average_window)
 
+        self.rl_v = 0
+        self.rr_v = 0
+
     # def odom_cb(self,msg):
     #     self.yaw = msg.twist.twist.angular.z
+    def rl_callback(self,msg):
+        self.rl_v = msg.data
+
+    def rr_callback(self,msg):
+        self.rr_v = msg.data
+
 
     def get_yaw_from_pose(self, pose):
         orientation_q = pose.pose.orientation
@@ -190,7 +200,7 @@ class Start:
     def point_callback(self,msg):
         self.current_point = Point()
         self.current_point.x = msg.pose.position.x 
-        self.current_point.y = msg.pose.position.y + 0.02   
+        self.current_point.y = msg.pose.position.y    
 
         self.point_history_x.append(self.current_point.x)
         self.point_history_y.append(self.current_point.y)
@@ -198,8 +208,8 @@ class Start:
         self.current_point.x = sum(self.point_history_x) / len(self.point_history_x)
         self.current_point.y = sum(self.point_history_y) / len(self.point_history_y)
 
-    def vel_cb(self, msg):
-        self.curr_v = msg.data
+    # def vel_cb(self, msg):
+    #     self.curr_v = msg.data
 
     def local_cb(self, msg):
         self.local_waypoint = Point()
@@ -258,6 +268,45 @@ class Start:
 
         return -1
 
+    def global_to_local(self, target_point, position, yaw):
+        dx = target_point[0] - position[0]
+        dy = target_point[1] - position[1]
+
+        x_local = dx * cos(-yaw) - dy * sin(-yaw)
+        y_local = dx * sin(-yaw) + dy * cos(-yaw)
+
+        return x_local, y_local 
+
+
+    def pub_global_waypoint(self,x,y):
+        marker = Marker()
+        marker.header.frame_id = "map" 
+        marker.header.stamp = rospy.Time.now()
+        marker.ns = "waypoints"
+        marker.id = 0 
+        marker.type = Marker.SPHERE 
+        marker.action = Marker.ADD
+
+        marker.pose.position.x = x
+        marker.pose.position.y = y
+        marker.pose.position.z = 0
+
+        marker.pose.orientation.x = 0.0
+        marker.pose.orientation.y = 0.0
+        marker.pose.orientation.z = 0.0
+        marker.pose.orientation.w = 1.0
+
+        marker.scale.x = 5 
+        marker.scale.y = 5
+        marker.scale.z = 5
+
+        marker.color.a = 1.0  
+        marker.color.r = 1.0 
+        marker.color.g = 1.0 
+        marker.color.b = 1.0
+
+        self.global_odom_pub.publish(marker)
+
 
     def run_control_loop(self):
         rate = rospy.Rate(10)  # 10 Hz
@@ -269,7 +318,8 @@ class Start:
                 continue
 
             waypoint_sec = self.find_waypoint_section(self.curr_lat, self.curr_lon, waypoint_sections)
-
+            self.curr_v = (self.rl_v + self.rr_v)/7.2
+            # rospy.loginfo(f"current velocity: {self.curr_v}")
             if  self.global_pose_x is not None and self.global_pose_y is not None and self.global_waypoints_x is not None and self.global_waypoints_y is not None and waypoint_sec != -1:
                 waypoint_x = self.global_waypoints_x
                 waypoint_y = self.global_waypoints_y
@@ -279,10 +329,15 @@ class Start:
 
                 yaw = self.yaw
 
+                x_local , y_local = self.global_to_local(waypoint,position, yaw)
+                self.pub_global_waypoint(x_local, y_local)
+
+                rospy.loginfo(f"current velocity: {self.curr_v}")
                 target_steering, target_position = self.pure_pursuit.run(self.curr_v, waypoint, position, yaw)
-                current_speed = self.curr_v
                 throttle = self.pid.run(target_position, position)
-                
+                throttle *= 0.9
+                throttle = np.clip(throttle,0,6)
+            
                 # accel = throttle / 150
                 if waypoint_sec == 5:
                     light = Float32()
@@ -302,7 +357,6 @@ class Start:
                 self.global_waypoints_x = None
                 self.global_waypoints_y = None
 
-
             elif self.current_point is not None and waypoint_sec == -1:
                 
                 way_x = self.current_point.x
@@ -311,12 +365,14 @@ class Start:
                 waypoint = (way_x, way_y)
                 
                 yaw = self.yaw_rate
+                rospy.loginfo(f"current velocity: {self.curr_v}")
                 target_steering, target_position = self.pure_pursuit.run(self.curr_v, waypoint, position, yaw)
                 current_speed = self.curr_v
                 throttle = self.pid.run(target_position, position)
-                accel = throttle / 100
+                throttle *= 0.9
+                throttle = np.clip(throttle,0,6)
+                accel = throttle
                 steer = target_steering * self.steer_ratio
-
                 temp = Vector3()
                 temp.x = accel
                 temp.y = steer

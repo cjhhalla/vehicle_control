@@ -18,12 +18,13 @@ class RVizVisualization:
         # ROS Subscriber
         rospy.Subscriber('/last_target_point', Marker, self.point_callback)
         rospy.Subscriber('/target_actuator', Vector3, self.actuator_callback)
-        rospy.Subscriber('/current_global_waypoint', Marker, self.global_callback)
+        rospy.Subscriber('/global_odom_frame_point', Marker, self.global_callback)
         rospy.Subscriber('/vehicle/steering_angle', Float32, self.steer_callback)
         rospy.Subscriber('/vehicle/velocity_RL', Float32, self.rl_callback)
         rospy.Subscriber('/vehicle/velocity_RR', Float32, self.rr_callback)
         # Variables to store received data
         self.current_point = Point()
+        self.global_current_point = Point()
         self.target_accel = 0.0
         self.target_steer = 0.0 
         self.target_waypoint = 0
@@ -43,8 +44,8 @@ class RVizVisualization:
         self.rr_v = msg.data
 
     def global_callback(self,msg):
-        self.current_point.x = msg.pose.position.x
-        self.current_point.y = msg.pose.position.y
+        self.global_current_point.x = msg.pose.position.x
+        self.global_current_point.y = msg.pose.position.y
 
     def point_callback(self, msg):
         self.current_point.x = msg.pose.position.x 
@@ -57,7 +58,6 @@ class RVizVisualization:
 
     def publish_markers(self):
         # Publish point marker
-        self.publish_point_marker()
 
         # Publish heading marker
         self.publish_heading_marker()
@@ -65,8 +65,10 @@ class RVizVisualization:
         # Publish text markers
         if self.target_waypoint == 0:
             self.publish_text_marker("global waypoint", 0, 3, 3, marker_id=1)
+            self.publish_global_point_marker()
         elif self.target_waypoint == 1:
             self.publish_text_marker("local waypoint", 0, 3, 3, marker_id=1)
+            self.publish_point_marker()
         self.publish_text_marker(f"Actuator: {self.target_accel: f}",0, 3, 4, marker_id = 2)
         self.publish_text_marker(f"Steering angle: {self.target_steer:.2f}", 0, 3, 5, marker_id=3)
         self.publish_text_marker(f"Steering wheel angle: {self.target_steer * 12:.2f}", 0, 3, 6, marker_id=4)
@@ -76,7 +78,7 @@ class RVizVisualization:
 
     def publish_point_marker(self):
         point_marker = Marker()
-        point_marker.header.frame_id = "map"
+        point_marker.header.frame_id = "base_link"
         point_marker.header.stamp = rospy.Time.now()
         point_marker.ns = "point_marker"
         point_marker.id = 0
@@ -102,9 +104,37 @@ class RVizVisualization:
         # Publish the marker
         self.point_marker_pub.publish(point_marker)
 
+    def publish_global_point_marker(self):
+        point_marker = Marker()
+        point_marker.header.frame_id = "base_link"
+        point_marker.header.stamp = rospy.Time.now()
+        point_marker.ns = "point_marker"
+        point_marker.id = 0
+        point_marker.type = Marker.SPHERE
+        point_marker.action = Marker.ADD
+
+        # Position and scale
+        point_marker.pose.position = self.global_current_point
+        point_marker.pose.orientation.x = 0.0
+        point_marker.pose.orientation.y = 0.0
+        point_marker.pose.orientation.z = 0.0
+        point_marker.pose.orientation.w = 1.0
+        point_marker.scale.x = 0.5
+        point_marker.scale.y = 0.5
+        point_marker.scale.z = 0.5
+
+        # Color
+        point_marker.color.a = 1.0  # Fully opaque
+        point_marker.color.r = 0.0
+        point_marker.color.g = 0.0
+        point_marker.color.b = 1.0
+
+        # Publish the marker
+        self.point_marker_pub.publish(point_marker)
+
     def publish_heading_marker(self):
         heading_marker = Marker()
-        heading_marker.header.frame_id = "map"
+        heading_marker.header.frame_id = "base_link"
         heading_marker.header.stamp = rospy.Time.now()
         heading_marker.ns = "heading_marker"
         heading_marker.id = 1
@@ -145,7 +175,7 @@ class RVizVisualization:
 
     def publish_text_marker(self, text, position_x, position_y, position_z, marker_id):
         text_marker = Marker()
-        text_marker.header.frame_id = "map"
+        text_marker.header.frame_id = "base_link"
         text_marker.header.stamp = rospy.Time.now()
         text_marker.ns = "text_marker"
         text_marker.id = marker_id

@@ -8,15 +8,20 @@ import sys
 from std_msgs.msg import Float32, Int32, Bool, String
 from morai_msgs.msg import CtrlCmd
 from geometry_msgs.msg import Vector3
+import rospkg
 def alive_counter(alv_cnt):
     return (alv_cnt + 1) % 256
+
+rospack = rospkg.RosPack()
+pack_path = rospack.get_path('capstone')
+dbc_path = f"{pack_path}/dbc/can.dbc"
 
 class IONIQ:
     def __init__(self):
         rospy.init_node("CAN_CONVERTER")
         self.bus = can.ThreadSafeBus(
             interface='socketcan', channel='can0', bitrate=500000)
-        self.db = cantools.database.load_file('/workspace/can.dbc')
+        self.db = cantools.database.load_file(dbc_path)
 
         # Local variables
         self.PA_enable = 0
