@@ -1,0 +1,24 @@
+<launch>
+    <node
+        pkg="capstone"
+        type="run_setting.py"
+        name="node1"
+        output="log" />
+
+    <node
+        pkg="capstone"
+        type="vis.py"
+        name="node2"
+        output="screen" />
+
+    <node
+        pkg="capstone"
+        type="run_control.py"
+        name="control_node"
+        output="screen" />
+    <!-- <node
+        pkg="capstone"
+        type="can2morai.py"
+        name="node3"
+        output="screen" /> -->
+</launch>

@@ -1,0 +1,13 @@
+<launch>
+    <node
+        pkg="capstone"
+        type="run_control.py"
+        name="control_node"
+        output="screen" />
+        
+    <!-- <node
+        pkg="capstone"
+        type="can2morai.py"
+        name="node3"
+        output="screen" /> -->
+</launch>
