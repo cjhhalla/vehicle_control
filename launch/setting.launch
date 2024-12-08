@@ -1,23 +1,23 @@
 <launch>
     <node
-        pkg="capstone"
+        pkg="vehicle_control"
         type="run_setting.py"
         name="node1"
         output="log" />
 
     <node
-        pkg="capstone"
+        pkg="vehicle_control"
         type="vis.py"
         name="node2"
         output="screen" />
 
     <node
-        pkg="capstone"
+        pkg="vehicle_control"
         type="run_control.py"
         name="control_node"
         output="screen" />
     <!-- <node
-        pkg="capstone"
+        pkg="vehicle_control"
         type="can2morai.py"
         name="node3"
         output="screen" /> -->
