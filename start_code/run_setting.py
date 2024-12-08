@@ -195,7 +195,7 @@ class PathTracker:
 
         x_enu, y_enu = enu_point
 
-        gps_offset = np.array([1.9,0.0])  # x: 1m, y: 0m
+        gps_offset = np.array([0.0,0.0])  # x: 1m, y: 0m
 
         offset_x = gps_offset[0] * np.cos(-self.init_yaw) - gps_offset[1] * np.sin(-self.init_yaw)
         offset_y = gps_offset[0] * np.sin(-self.init_yaw) + gps_offset[1] * np.cos(-self.init_yaw)
@@ -363,7 +363,7 @@ class PathTracker:
         closest_idx = np.argmin(distance)
         closest_dist = distance[closest_idx]
         
-        th = 10
+        th = 8.5
 
         if(closest_dist < th):
             close_idx_wp = self.waypoint[closest_idx]

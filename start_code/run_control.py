@@ -85,7 +85,31 @@ class PurePursuit:
 
         return x_local, y_local 
 
+    def vel_global_to_local(self, target_point, position, yaw):
+        dx = target_point[0] - position[0]
+        dy = target_point[1] - position[1]
+
+        x_local = dx * cos(-yaw) - dy * sin(-yaw)
+        y_local = dx * sin(-yaw) + dy * cos(-yaw)
+
+        return x_local, y_local 
+
     def run(self, vEgo, target_point, position, yaw):
+        lfd = self.Lfc + self.k * vEgo
+        lfd = np.clip(lfd, 3, 60)
+        rospy.loginfo(f"Lfd: {lfd}")
+        x_local , y_local = self.vel_global_to_local(target_point,position, yaw)
+        diff = np.sqrt(x_local**2 + y_local**2)
+        
+        if diff > 0:
+            dis = np.linalg.norm(diff)
+            if dis >= lfd:
+                theta = atan2(y_local, x_local)
+                steering_angle = atan2(2 * self.L * sin(theta), lfd)
+                return degrees(steering_angle), target_point
+        return 0.0, target_point  
+
+    def run_global(self, vEgo, target_point, position, yaw):
         lfd = self.Lfc + self.k * vEgo
         lfd = np.clip(lfd, 3, 60)
         rospy.loginfo(f"Lfd: {lfd}")
@@ -156,7 +180,7 @@ class Start:
         self.yaw_rate = None
         self.is_start = False
 
-        self.moving_average_window = 1  
+        self.moving_average_window = 2  
         self.point_history_x = deque(maxlen=self.moving_average_window)
         self.point_history_y = deque(maxlen=self.moving_average_window)
 
@@ -199,7 +223,7 @@ class Start:
 
     def point_callback(self,msg):
         self.current_point = Point()
-        self.current_point.x = msg.pose.position.x 
+        self.current_point.x = msg.pose.position.x
         self.current_point.y = msg.pose.position.y    
 
         self.point_history_x.append(self.current_point.x)
@@ -257,7 +281,7 @@ class Start:
                 return idx
         return None
 
-    def find_waypoint_section(self, curr_lat, curr_lon, sections, threshold=10) :
+    def find_waypoint_section(self, curr_lat, curr_lon, sections, threshold=8.5) :
         curr_position = (curr_lat, curr_lon)
 
         for section_id, waypoints in sections.items():
@@ -330,12 +354,13 @@ class Start:
                 yaw = self.yaw
 
                 x_local , y_local = self.global_to_local(waypoint,position, yaw)
+                y_local -= 0.15
                 self.pub_global_waypoint(x_local, y_local)
 
                 rospy.loginfo(f"current velocity: {self.curr_v}")
-                target_steering, target_position = self.pure_pursuit.run(self.curr_v, waypoint, position, yaw)
+                target_steering, target_position = self.pure_pursuit.run_global(self.curr_v, waypoint, position, yaw)
                 throttle = self.pid.run(target_position, position)
-                throttle *= 0.9
+                throttle *= 0.7
                 throttle = np.clip(throttle,0,6)
             
                 # accel = throttle / 150
@@ -369,7 +394,8 @@ class Start:
                 target_steering, target_position = self.pure_pursuit.run(self.curr_v, waypoint, position, yaw)
                 current_speed = self.curr_v
                 throttle = self.pid.run(target_position, position)
-                throttle *= 0.9
+                throttle *= 0.7
+                print(throttle)
                 throttle = np.clip(throttle,0,6)
                 accel = throttle
                 steer = target_steering * self.steer_ratio

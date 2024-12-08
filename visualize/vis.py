@@ -69,11 +69,11 @@ class RVizVisualization:
         elif self.target_waypoint == 1:
             self.publish_text_marker("local waypoint", 0, 3, 3, marker_id=1)
             self.publish_point_marker()
-        self.publish_text_marker(f"Actuator: {self.target_accel: f}",0, 3, 4, marker_id = 2)
-        self.publish_text_marker(f"Steering angle: {self.target_steer:.2f}", 0, 3, 5, marker_id=3)
-        self.publish_text_marker(f"Steering wheel angle: {self.target_steer * 12:.2f}", 0, 3, 6, marker_id=4)
-        self.publish_text_marker(f"Real Steering wheel angle: {self.steer:.2f}", 0, 3, 7, marker_id=5)
-        self.publish_text_marker(f"current velocity: {self.curr_v:.2f}", 0, 3, 8, marker_id=6)
+        self.publish_text_marker(f"Actuator [%]: {self.target_accel: f}",0, 3, 4, marker_id = 2)
+        self.publish_text_marker(f"Steering angle [deg]: {self.target_steer:.2f}", 0, 3, 5, marker_id=3)
+        self.publish_text_marker(f"Steering wheel angle [deg]: {self.target_steer * 12:.2f}", 0, 3, 6, marker_id=4)
+        self.publish_text_marker(f"Real Steering wheel angle [deg]: {self.steer:.2f}", 0, 3, 7, marker_id=5)
+        self.publish_text_marker(f"current velocity [m/s]: {self.curr_v:.2f}", 0, 3, 8, marker_id=6)
         
 
     def publish_point_marker(self):

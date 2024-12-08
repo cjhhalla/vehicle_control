@@ -1,0 +1,11 @@
+GPS point detect threshold = 7
+
+Lane Point offset x,y
+
+lane Point queue length
+
+lane Point data rate [Hz]
+
+left & right light signal
+
+
