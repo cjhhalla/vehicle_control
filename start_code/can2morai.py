@@ -12,16 +12,16 @@ import rospkg
 def alive_counter(alv_cnt):
     return (alv_cnt + 1) % 256
 
-rospack = rospkg.RosPack()
-pack_path = rospack.get_path('capstone')
-dbc_path = f"{pack_path}/dbc/can.dbc"
+# rospack = rospkg.RosPack()
+# pack_path = rospack.get_path('capstone')
+# dbc_path = f"{pack_path}/dbc/can.dbc"
 
 class IONIQ:
     def __init__(self):
         rospy.init_node("CAN_CONVERTER")
         self.bus = can.ThreadSafeBus(
             interface='socketcan', channel='can0', bitrate=500000)
-        self.db = cantools.database.load_file(dbc_path)
+        self.db = cantools.database.load_file('/home/inha/capstone/src/vehicle_control/dbc/can.dbc')
 
         # Local variables
         self.PA_enable = 0

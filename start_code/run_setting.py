@@ -363,7 +363,7 @@ class PathTracker:
         closest_idx = np.argmin(distance)
         closest_dist = distance[closest_idx]
         
-        th = 8.5
+        th = 7
 
         if(closest_dist < th):
             close_idx_wp = self.waypoint[closest_idx]

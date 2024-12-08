@@ -3,7 +3,7 @@
         pkg="vehicle_control"
         type="run_setting.py"
         name="node1"
-        output="log" />
+        output="screen" />
 
     <node
         pkg="vehicle_control"

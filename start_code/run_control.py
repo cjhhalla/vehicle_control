@@ -71,7 +71,7 @@ waypoint_sections = {
 class PurePursuit:
     def __init__(self):
         self.L = 3
-        self.k = 0.1  # 0.1~1
+        self.k = 0.125  # 0.1~1
         self.Lfc = 6  
     def euc_distance(self, pt1, pt2):
         return norm([pt2[0] - pt1[0], pt2[1] - pt1[1]])
@@ -81,7 +81,7 @@ class PurePursuit:
         dy = target_point[1] - position[1]
 
         x_local = dx * cos(-yaw) - dy * sin(-yaw)
-        y_local = dx * sin(-yaw) + dy * cos(-yaw)
+        y_local = dx * sin(-yaw) + dy * cos(-yaw) - 0.2
 
         return x_local, y_local 
 
@@ -224,7 +224,7 @@ class Start:
     def point_callback(self,msg):
         self.current_point = Point()
         self.current_point.x = msg.pose.position.x
-        self.current_point.y = msg.pose.position.y    
+        self.current_point.y = msg.pose.position.y -0.03  
 
         self.point_history_x.append(self.current_point.x)
         self.point_history_y.append(self.current_point.y)
@@ -281,7 +281,7 @@ class Start:
                 return idx
         return None
 
-    def find_waypoint_section(self, curr_lat, curr_lon, sections, threshold=8.5) :
+    def find_waypoint_section(self, curr_lat, curr_lon, sections, threshold=7) :
         curr_position = (curr_lat, curr_lon)
 
         for section_id, waypoints in sections.items():
@@ -354,7 +354,7 @@ class Start:
                 yaw = self.yaw
 
                 x_local , y_local = self.global_to_local(waypoint,position, yaw)
-                y_local -= 0.15
+                
                 self.pub_global_waypoint(x_local, y_local)
 
                 rospy.loginfo(f"current velocity: {self.curr_v}")
@@ -368,7 +368,7 @@ class Start:
                     light = Float32()
                     light.data = 1
                     self.light_pub.publish(light)   
-                steer = target_steering * self.steer_ratio / 2.5
+                steer = target_steering * self.steer_ratio /1.5
                 rospy.loginfo("Using Global Waypoint")
                 rospy.loginfo(f"accel value: {accel}")
                 rospy.loginfo(f"steer value: {steer}")
