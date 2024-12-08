@@ -294,24 +294,25 @@ class IONIQ:
     def state_controller(self):
         while not rospy.is_shutdown():
             try:
-                cmd = input('99: PA |88: LON |77: ALL\n \
-                            66: Go | 55: Stop | 44: Steer\n \
-                            1001: reset\n1000: over\n')
+                cmd = input('77: ALL\n \
+                            1001: reset\n')
                 cmd = int(cmd)
                 if cmd == 99: 
                     self.reset_trigger()
-                    self.PA_enable = 1
-                    self.LON_enable = 0
-                    self.brake = 0
-                    self.accel = 0
-                    self.reset = 0
+                    # self.PA_enable = 1
+                    # self.LON_enable = 0
+                    # self.brake = 0
+                    # self.accel = 0
+                    # self.reset = 0
+                    rospy.logwarn("Not available... Re-Insert")
                 elif cmd == 88:
                     self.reset_trigger()
-                    self.PA_enable = 0
-                    self.LON_enable = 1
-                    self.brake = 0
-                    self.accel = 0
-                    self.reset = 0
+                    # self.PA_enable = 0
+                    # self.LON_enable = 1
+                    # self.brake = 0
+                    # self.accel = 0
+                    # self.reset = 0
+                    rospy.logwarn("Not available... Re-Insert")
                 elif cmd == 77: 
                     self.reset_trigger()
                     self.PA_enable = 1
@@ -327,26 +328,29 @@ class IONIQ:
                     exit(0)
                 elif cmd == 66:
                     self.reset_trigger()
-                    self.PA_enable = 1
-                    self.LON_enable = 1
-                    self.brake = 0
-                    self.accel = 6
-                    self.reset = 0
+                    # self.PA_enable = 1
+                    # self.LON_enable = 1
+                    # self.brake = 0
+                    # self.accel = 6
+                    # self.reset = 0
+                    rospy.logwarn("Not available... Re-Insert")
                 elif cmd == 55:
                     self.reset_trigger()
-                    self.PA_enable = 0
-                    self.LON_enable = 0
-                    self.brake = 0
-                    self.accel = 0
-                    self.reset = 0
+                    # self.PA_enable = 0
+                    # self.LON_enable = 0
+                    # self.brake = 0
+                    # self.accel = 0
+                    # self.reset = 0
+                    rospy.logwarn("Not available... Re-Insert")
                 elif cmd == 44:
                     self.reset_trigger()
-                    self.PA_enable = 1
-                    self.LON_enable = 1
-                    self.brake = 0
-                    self.accel = 0.0
-                    self.steer = 30
-                    self.reset = 0
+                    # self.PA_enable = 1
+                    # self.LON_enable = 1
+                    # self.brake = 0
+                    # self.accel = 0.0
+                    # self.steer = 30
+                    # self.reset = 0
+                    rospy.logwarn("Not available... Re-Insert")
             except:
                 print("re-insert")
 
