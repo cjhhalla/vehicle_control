@@ -133,9 +133,18 @@ class IONIQ:
 
         rospy.Subscriber('vehicle/left_signal', Float32, self.light_cb)
     
+        rospy.Subscriber('/mobinha/hazard_warning', Bool, self.obstacle_cb)
+
         self.light_left = 0
         self.light_right = 0
         self.light_count = 0
+
+        self.is_obstacle = False
+
+    def obstacle_cb(sef,msg):
+        self.is_obstacle = msg.data
+        if(self.is_obstacle):
+            rospy.logwarn("Warning!! Vehicle in Hazard!")
 
     def light_cb(self,msg):
         self.light_left = msg.data
@@ -173,6 +182,8 @@ class IONIQ:
                 self.light_left = 0
                 self.light_right = 0
                 self.light_count = 0
+        if(self.is_obstacle):
+            self.brake = 0.5
 
         msg = self.db.encode_message('Control', signals)
         self.sender(0x210, msg)
@@ -296,8 +307,9 @@ class IONIQ:
         while not rospy.is_shutdown():
             try:
                 cmd = input('77: ALL\n \
+                            66 : Kill car\n \
                             55 : Stop\n \
-                            66 : Kill Car\n \
+                            44 : Move\n \
                             1001: reset\n')
                 cmd = int(cmd)
                 if cmd == 99: 
@@ -349,13 +361,13 @@ class IONIQ:
                     # rospy.logwarn("Not available... Re-Insert")
                 elif cmd == 44:
                     self.reset_trigger()
-                    # self.PA_enable = 1
-                    # self.LON_enable = 1
-                    # self.brake = 0
-                    # self.accel = 0.0
-                    # self.steer = 30
-                    # self.reset = 0
-                    rospy.logwarn("Not available... Re-Insert")
+                    self.PA_enable = 1
+                    self.LON_enable = 1
+                    self.brake = 0
+                    self.accel = 6.0
+                    self.steer = 0
+                    self.reset = 0
+                    # rospy.logwarn("Not available... Re-Insert")
             except:
                 print("re-insert")
 
