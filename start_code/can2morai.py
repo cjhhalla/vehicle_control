@@ -334,7 +334,7 @@ class IONIQ:
                     self.PA_enable = 0
                     self.LON_enable = 0
                     self.brake = 0
-                    self.accel = 6
+                    self.accel = 0
                     self.reset = 0
                     self.steer = 0
                     # rospy.logwarn("Not available... Re-Insert")

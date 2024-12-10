@@ -231,7 +231,6 @@ class PathTracker:
         curr_pose = Odometry()
         curr_pose.pose = self.pose_stamped
         transformed_waypoints = []
-        # for waypoint in waypoints:
         enu_point = self.gps_to_enu(waypoint)
         odom_point = self.enu_to_odom(enu_point, curr_pose)
         transformed_waypoints.append(odom_point)
@@ -364,7 +363,7 @@ class PathTracker:
         closest_idx = np.argmin(distance)
         closest_dist = distance[closest_idx]
         
-        th = 7  
+        th = 10
 
         if(closest_dist < th):
             close_idx_wp = self.waypoint[closest_idx]

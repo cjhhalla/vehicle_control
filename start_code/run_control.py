@@ -27,7 +27,6 @@ waypoints = [
     (37.386132, 126.652358),
     (37.386156, 126.652317),
     (37.386186, 126.652270),
-    (37.386214, 126.652223),
     ## 1
     (37.386988, 126.648747),
     (37.386944, 126.648705),
@@ -35,20 +34,17 @@ waypoints = [
     (37.386859, 126.648623),
     (37.386818, 126.648584),
     (37.386776, 126.648543),
-    (37.386764, 126.648531),
     ## 2
     (37.385401, 126.648788),
     (37.385360, 126.648856),
     (37.385322, 126.648918),
     (37.385288, 126.648973),
     (37.385254, 126.649029),
-    (37.385224, 126.649079),
     ## 3
     (37.384455, 126.650347),
     (37.384404, 126.650428),
     (37.384354, 126.650510),
     (37.384303, 126.650592),
-    (37.384268, 126.650650),
     ## 4
     (37.383819, 126.651387),
     (37.383778, 126.651455),
@@ -71,31 +67,28 @@ waypoints = [
     (37.382614, 126.653463),
     (37.382632, 126.653498),
     (37.382658, 126.653532),
-    (37.382681, 126.653555),
     ## 7
     (37.383053, 126.653905),
     (37.383119, 126.653969),
     (37.383170, 126.654019),
     (37.383241, 126.654088),
-    (37.383289, 126.654134),
     ## 8
     (37.383612, 126.654445),
     (37.383697, 126.654525),
     (37.383768, 126.654591),
-    (37.383836, 126.654656),
-    (37.383875, 126.654693)
+    (37.383836, 126.654656)
 ]
 
 waypoint_sections = {
-    0: waypoints[0:10],   # #0
-    1: waypoints[10:17],  # #1
-    2: waypoints[17:23],  # #2
-    3: waypoints[23:28],  # #3
-    4: waypoints[28:32],  # #4
-    5: waypoints[32:36],  # #5
-    6: waypoints[36:48],  # #6
-    7: waypoints[48:53],  # #7
-    8: waypoints[53:58],  # #8
+    0: waypoints[0:9],    # #0 (0~8)
+    1: waypoints[9:15],   # #1 (9~14)
+    2: waypoints[15:20],  # #2 (15~19)
+    3: waypoints[20:24],  # #3 (20~23)
+    4: waypoints[24:28],  # #4 (24~27)
+    5: waypoints[28:32],  # #5 (28~31)
+    6: waypoints[32:44],  # #6 (32~43)
+    7: waypoints[44:48],  # #7 (44~47)
+    8: waypoints[48:58],  # #8 (48~57)
 }
 
 
@@ -104,8 +97,9 @@ waypoint_sections = {
 class PurePursuit:
     def __init__(self):
         self.L = 3
-        self.k = 0.125  # 0.1~1
+        self.k = 0.15  # 0.1~1
         self.Lfc = 6  
+        self.alpha = 1.5
     def euc_distance(self, pt1, pt2):
         return norm([pt2[0] - pt1[0], pt2[1] - pt1[1]])
 
@@ -127,9 +121,11 @@ class PurePursuit:
 
         return x_local, y_local 
 
-    def run(self, vEgo, target_point, position, yaw):
+    def run(self, vEgo, target_point, position, yaw, sEgo):
+        # gamma = math.tan(radians(abs(sEgo)))/self.L
+        # lfc = self.Lfc / (1+self.alpha*gamma)
         lfd = self.Lfc + self.k * vEgo
-        lfd = np.clip(lfd, 3, 60)
+        lfd = np.clip(lfd, 5, 10)
         rospy.loginfo(f"Lfd: {lfd}")
         x_local , y_local = self.vel_global_to_local(target_point,position, yaw)
         diff = np.sqrt(x_local**2 + y_local**2)
@@ -142,9 +138,11 @@ class PurePursuit:
                 return degrees(steering_angle), target_point
         return 0.0, target_point  
 
-    def run_global(self, vEgo, target_point, position, yaw):
+    def run_global(self, vEgo, target_point, position, yaw, sEgo):
+        # gamma = math.tan(radians(abs(sEgo)))/self.L
+        # lfc = self.Lfc/(1+self.alpha*gamma)
         lfd = self.Lfc + self.k * vEgo
-        lfd = np.clip(lfd, 3, 60)
+        lfd = np.clip(lfd, 5, 10)
         rospy.loginfo(f"Lfd: {lfd}")
         x_local , y_local = self.global_to_local(target_point,position, yaw)
         diff = np.sqrt(x_local**2 + y_local**2)
@@ -193,9 +191,11 @@ class Start:
         self.yaw_sub = rospy.Subscriber('/vehicle/yaw_rate_sensor',Float32,self.yaw_cb)
         self.rl_sub = rospy.Subscriber('/vehicle/velocity_RL', Float32, self.rl_callback)
         self.rr_sub = rospy.Subscriber('/vehicle/velocity_RR', Float32, self.rr_callback)
+        self.steer_sub = rospy.Subscriber('/vehicle/steering_angle', Float32, self.steer_callback)
         self.actuator_pub = rospy.Publisher('/target_actuator', Vector3, queue_size=10)
         self.light_pub = rospy.Publisher('vehicle/left_signal', Float32, queue_size =10)
         self.global_odom_pub = rospy.Publisher('/global_odom_frame_point',Marker,queue_size=10)
+
 
         self.curr_v = 0
         self.pose = PoseStamped()
@@ -219,9 +219,13 @@ class Start:
 
         self.rl_v = 0
         self.rr_v = 0
+        
+        self.curr_steer = 0
 
-    # def odom_cb(self,msg):
-    #     self.yaw = msg.twist.twist.angular.z
+
+    def steer_callback(self,msg):
+        self.curr_steer = msg.data
+
     def rl_callback(self,msg):
         self.rl_v = msg.data
 
@@ -259,11 +263,11 @@ class Start:
         self.current_point.x = msg.pose.position.x 
         self.current_point.y = msg.pose.position.y +0.04  
 
-        self.point_history_x.append(self.current_point.x)
-        self.point_history_y.append(self.current_point.y)
+        # self.point_history_x.append(self.current_point.x)
+        # self.point_history_y.append(self.current_point.y)
 
-        self.current_point.x = sum(self.point_history_x) / len(self.point_history_x)
-        self.current_point.y = sum(self.point_history_y) / len(self.point_history_y)
+        # self.current_point.x = sum(self.point_history_x) / len(self.point_history_x)
+        # self.current_point.y = sum(self.point_history_y) / len(self.point_history_y)
 
     # def vel_cb(self, msg):
     #     self.curr_v = msg.data
@@ -278,7 +282,6 @@ class Start:
     def global_cb(self, msg):
         self.global_waypoints_x = msg.pose.position.x
         self.global_waypoints_y = msg.pose.position.y
-
 
     def pose_cb(self, msg):
         self.pose = msg
@@ -314,12 +317,16 @@ class Start:
                 return idx
         return None
 
-    def find_waypoint_section(self, curr_lat, curr_lon, sections, threshold=7) :
+    def find_waypoint_section(self, curr_lat, curr_lon, sections, threshold=10) :
         curr_position = (curr_lat, curr_lon)
 
         for section_id, waypoints in sections.items():
-            for waypoint in waypoints:
+            last_waypoint = waypoints[-1]
+
+            for i,waypoint in enumerate(waypoints):
                 distance = geodesic(curr_position, waypoint).meters
+                if i== len(waypoint) -1 and distance <=1:
+                    return -1
                 if distance <= threshold:
                     return section_id  
 
@@ -391,17 +398,19 @@ class Start:
                 self.pub_global_waypoint(x_local, y_local)
 
                 rospy.loginfo(f"current velocity: {self.curr_v}")
-                target_steering, target_position = self.pure_pursuit.run_global(self.curr_v, waypoint, position, yaw)
+                target_steering, target_position = self.pure_pursuit.run_global(self.curr_v, waypoint, position, yaw,self.curr_steer)
                 throttle = self.pid.run(target_position, position)
                 throttle *= 0.7
-                throttle = np.clip(throttle,0,6)
+                throttle = np.clip(throttle,0,6.5)
             
                 # accel = throttle / 150
-                if waypoint_sec == 5:
+                if waypoint_sec == 6:
                     light = Float32()
                     light.data = 1
                     self.light_pub.publish(light)   
-                steer = target_steering * self.steer_ratio /1.5
+                    steer = target_steering * self.steer_ratio
+                else:
+                    steer = target_steering * self.steer_ratio / 10
                 rospy.loginfo("Using Global Waypoint")
                 rospy.loginfo(f"accel value: {accel}")
                 rospy.loginfo(f"steer value: {steer}")
@@ -424,12 +433,11 @@ class Start:
                 
                 yaw = self.yaw_rate
                 rospy.loginfo(f"current velocity: {self.curr_v}")
-                target_steering, target_position = self.pure_pursuit.run(self.curr_v, waypoint, position, yaw)
+                target_steering, target_position = self.pure_pursuit.run(self.curr_v, waypoint, position, yaw,self.curr_steer)
                 current_speed = self.curr_v
                 throttle = self.pid.run(target_position, position)
-                throttle *= 0.75
-                print(throttle)
-                throttle = np.clip(throttle,0,6)
+                throttle *= 0.7
+                throttle = np.clip(throttle,0,6.5)
                 accel = throttle
                 steer = target_steering * self.steer_ratio
                 temp = Vector3()
