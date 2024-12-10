@@ -1,8 +1,0 @@
-<!-- judgment.launch -->
-<launch>
-    <node name="judgment_node" pkg="cream_sooo" type="judgment_node" output="screen">
-        <!-- 파라미터 설정 -->
-        <param name="safe_distance" value="15.0"/> <!-- 미터 단위 -->
-        <param name="min_speed" value="5.56"/>     <!-- m/s 단위 (20 km/h) -->
-    </node>
-</launch>
