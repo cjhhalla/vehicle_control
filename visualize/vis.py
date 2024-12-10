@@ -49,7 +49,7 @@ class RVizVisualization:
 
     def point_callback(self, msg):
         self.current_point.x = msg.pose.position.x 
-        self.current_point.y = msg.pose.position.y
+        self.current_point.y = msg.pose.position.y 
 
     def actuator_callback(self, msg):
         self.target_accel = msg.x

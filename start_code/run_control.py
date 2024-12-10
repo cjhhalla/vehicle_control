@@ -97,7 +97,7 @@ class PurePursuit:
     def __init__(self):
         self.L = 3
         self.k = 0.05  # 0.1~1
-        self.Lfc = 5.9 
+        self.Lfc = 5.5 
         self.alpha = 1.5
     def euc_distance(self, pt1, pt2):
         return norm([pt2[0] - pt1[0], pt2[1] - pt1[1]])
@@ -259,7 +259,7 @@ class Start:
 
     def point_callback(self,msg):
         self.current_point = Point()
-        self.current_point.x = msg.pose.position.x - 0.25
+        self.current_point.x = msg.pose.position.x 
         self.current_point.y = msg.pose.position.y + 0.09
 
         # self.point_history_x.append(self.current_point.x)
