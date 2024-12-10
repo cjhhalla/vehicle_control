@@ -87,7 +87,7 @@ waypoint_sections = {
     5: waypoints[28:32],  # #5 (28~31)
     6: waypoints[32:43],  # #6 (32~43)
     7: waypoints[43:47],  # #7 (44~47)
-    8: waypoints[47::],  # #8 (48~57)
+    8: waypoints[47:51],  # #8 (48~57)
 }
 
 
@@ -96,8 +96,8 @@ waypoint_sections = {
 class PurePursuit:
     def __init__(self):
         self.L = 3
-        self.k = 0.05  # 0.1~1
-        self.Lfc = 5.9 
+        self.k = 0.14  # 0.1~1
+        self.Lfc = 6 
         self.alpha = 1.5
     def euc_distance(self, pt1, pt2):
         return norm([pt2[0] - pt1[0], pt2[1] - pt1[1]])
@@ -259,8 +259,8 @@ class Start:
 
     def point_callback(self,msg):
         self.current_point = Point()
-        self.current_point.x = msg.pose.position.x - 0.25
-        self.current_point.y = msg.pose.position.y + 0.09
+        self.current_point.x = msg.pose.position.x + 0.6
+        self.current_point.y = msg.pose.position.y + 0.1
 
         # self.point_history_x.append(self.current_point.x)
         # self.point_history_y.append(self.current_point.y)
@@ -324,7 +324,7 @@ class Start:
 
             for i,waypoint in enumerate(waypoints):
                 distance = geodesic(curr_position, waypoint).meters
-                if i== len(waypoint) -1 and distance <=1:
+                if i== len(waypoint) -1 and distance <=4:
                     return -1
                 if distance <= threshold:
                     return section_id  
@@ -432,7 +432,7 @@ class Start:
                 
                 yaw = self.yaw_rate
                 rospy.loginfo(f"current velocity: {self.curr_v}")
-                target_steering, target_position = self.pure_pursuit.run(self.curr_v, waypoint, position, yaw,self.curr_steer)
+                target_steering, target_position = self.pure_pursuit.run(self.curr_v, waypoint, position, 0, self.curr_steer)
                 current_speed = self.curr_v
                 throttle = self.pid.run(target_position, position)
                 throttle *= 0.75
@@ -447,7 +447,7 @@ class Start:
                 rospy.loginfo(f"accel value: {accel}")
                 rospy.loginfo(f"steer value: {steer}")
                 self.actuator_pub.publish(temp)
-                self.current_point = None
+                # self.current_point = None
 
             else:
                 # rospy.logwarn("No waypoints or current_point available. Skipping loop.")
