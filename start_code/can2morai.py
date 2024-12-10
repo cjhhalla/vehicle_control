@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 import can
 import cantools
 import threading
@@ -295,6 +296,8 @@ class IONIQ:
         while not rospy.is_shutdown():
             try:
                 cmd = input('77: ALL\n \
+                            55 : Stop\n \
+                            66 : Kill Car\n \
                             1001: reset\n')
                 cmd = int(cmd)
                 if cmd == 99: 
@@ -328,20 +331,22 @@ class IONIQ:
                     exit(0)
                 elif cmd == 66:
                     self.reset_trigger()
-                    # self.PA_enable = 1
-                    # self.LON_enable = 1
-                    # self.brake = 0
-                    # self.accel = 6
-                    # self.reset = 0
-                    rospy.logwarn("Not available... Re-Insert")
+                    self.PA_enable = 0
+                    self.LON_enable = 0
+                    self.brake = 0
+                    self.accel = 6
+                    self.reset = 0
+                    self.steer = 0
+                    # rospy.logwarn("Not available... Re-Insert")
                 elif cmd == 55:
                     self.reset_trigger()
-                    # self.PA_enable = 0
-                    # self.LON_enable = 0
-                    # self.brake = 0
-                    # self.accel = 0
-                    # self.reset = 0
-                    rospy.logwarn("Not available... Re-Insert")
+                    self.PA_enable = 1
+                    self.LON_enable = 1
+                    self.brake = 0.5
+                    self.steer = 0
+                    self.accel = 0
+                    self.reset = 0
+                    # rospy.logwarn("Not available... Re-Insert")
                 elif cmd == 44:
                     self.reset_trigger()
                     # self.PA_enable = 1

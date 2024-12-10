@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 import rospy
 from std_msgs.msg import Float32, Bool
 from geometry_msgs.msg import Point, PoseStamped
@@ -212,7 +213,7 @@ class Start:
         self.yaw_rate = None
         self.is_start = False
 
-        self.moving_average_window = 2  
+        self.moving_average_window = 1  
         self.point_history_x = deque(maxlen=self.moving_average_window)
         self.point_history_y = deque(maxlen=self.moving_average_window)
 
@@ -255,8 +256,8 @@ class Start:
 
     def point_callback(self,msg):
         self.current_point = Point()
-        self.current_point.x = msg.pose.position.x
-        self.current_point.y = msg.pose.position.y -0.03  
+        self.current_point.x = msg.pose.position.x 
+        self.current_point.y = msg.pose.position.y +0.04  
 
         self.point_history_x.append(self.current_point.x)
         self.point_history_y.append(self.current_point.y)
@@ -426,7 +427,7 @@ class Start:
                 target_steering, target_position = self.pure_pursuit.run(self.curr_v, waypoint, position, yaw)
                 current_speed = self.curr_v
                 throttle = self.pid.run(target_position, position)
-                throttle *= 0.7
+                throttle *= 0.75
                 print(throttle)
                 throttle = np.clip(throttle,0,6)
                 accel = throttle

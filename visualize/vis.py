@@ -78,7 +78,7 @@ class RVizVisualization:
 
     def publish_point_marker(self):
         point_marker = Marker()
-        point_marker.header.frame_id = "base_link"
+        point_marker.header.frame_id = "ego_car"
         point_marker.header.stamp = rospy.Time.now()
         point_marker.ns = "point_marker"
         point_marker.id = 0
@@ -106,7 +106,7 @@ class RVizVisualization:
 
     def publish_global_point_marker(self):
         point_marker = Marker()
-        point_marker.header.frame_id = "base_link"
+        point_marker.header.frame_id = "ego_car"
         point_marker.header.stamp = rospy.Time.now()
         point_marker.ns = "point_marker"
         point_marker.id = 0
@@ -134,7 +134,7 @@ class RVizVisualization:
 
     def publish_heading_marker(self):
         heading_marker = Marker()
-        heading_marker.header.frame_id = "base_link"
+        heading_marker.header.frame_id = "ego_car"
         heading_marker.header.stamp = rospy.Time.now()
         heading_marker.ns = "heading_marker"
         heading_marker.id = 1
@@ -175,7 +175,7 @@ class RVizVisualization:
 
     def publish_text_marker(self, text, position_x, position_y, position_z, marker_id):
         text_marker = Marker()
-        text_marker.header.frame_id = "base_link"
+        text_marker.header.frame_id = "ego_car"
         text_marker.header.stamp = rospy.Time.now()
         text_marker.ns = "text_marker"
         text_marker.id = marker_id
