@@ -66,7 +66,6 @@ waypoints = [
     (37.382606, 126.653430),
     (37.382614, 126.653463),
     (37.382632, 126.653498),
-    (37.382658, 126.653532),
     ## 7
     (37.383053, 126.653905),
     (37.383119, 126.653969),
@@ -86,9 +85,9 @@ waypoint_sections = {
     3: waypoints[20:24],  # #3 (20~23)
     4: waypoints[24:28],  # #4 (24~27)
     5: waypoints[28:32],  # #5 (28~31)
-    6: waypoints[32:44],  # #6 (32~43)
-    7: waypoints[44:48],  # #7 (44~47)
-    8: waypoints[48:58],  # #8 (48~57)
+    6: waypoints[32:43],  # #6 (32~43)
+    7: waypoints[43:47],  # #7 (44~47)
+    8: waypoints[47::],  # #8 (48~57)
 }
 
 
@@ -97,8 +96,8 @@ waypoint_sections = {
 class PurePursuit:
     def __init__(self):
         self.L = 3
-        self.k = 0.15  # 0.1~1
-        self.Lfc = 6  
+        self.k = 0.05  # 0.1~1
+        self.Lfc = 5.9 
         self.alpha = 1.5
     def euc_distance(self, pt1, pt2):
         return norm([pt2[0] - pt1[0], pt2[1] - pt1[1]])
@@ -260,8 +259,8 @@ class Start:
 
     def point_callback(self,msg):
         self.current_point = Point()
-        self.current_point.x = msg.pose.position.x 
-        self.current_point.y = msg.pose.position.y +0.04  
+        self.current_point.x = msg.pose.position.x - 0.25
+        self.current_point.y = msg.pose.position.y + 0.09
 
         # self.point_history_x.append(self.current_point.x)
         # self.point_history_y.append(self.current_point.y)
@@ -436,7 +435,7 @@ class Start:
                 target_steering, target_position = self.pure_pursuit.run(self.curr_v, waypoint, position, yaw,self.curr_steer)
                 current_speed = self.curr_v
                 throttle = self.pid.run(target_position, position)
-                throttle *= 0.7
+                throttle *= 0.75
                 throttle = np.clip(throttle,0,6.5)
                 accel = throttle
                 steer = target_steering * self.steer_ratio

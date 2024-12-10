@@ -355,7 +355,7 @@ class IONIQ:
                     self.reset_trigger()
                     self.PA_enable = 1
                     self.LON_enable = 1
-                    self.brake = 0.5
+                    self.brake = 10
                     self.steer = 0
                     self.accel = 0
                     self.reset = 0
