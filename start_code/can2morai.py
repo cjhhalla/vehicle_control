@@ -184,7 +184,8 @@ class IONIQ:
                 self.light_count = 0
         if(self.is_obstacle):
             self.brake = 0.5
-
+            self.accel = 0
+            
         msg = self.db.encode_message('Control', signals)
         self.sender(0x210, msg)
 
