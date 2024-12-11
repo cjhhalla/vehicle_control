@@ -135,13 +135,19 @@ class IONIQ:
     
         rospy.Subscriber('/mobinha/hazard_warning', Bool, self.obstacle_cb)
 
+        rospy.Subscriber('/laps_completed',Bool, self.laps_cb)
+
         self.light_left = 0
         self.light_right = 0
         self.light_count = 0
 
         self.is_obstacle = False
+        self.is_finish = False
 
-    def obstacle_cb(sef,msg):
+    def laps_cb(self,msg):
+        self.is_finish = msg.data
+
+    def obstacle_cb(self,msg):
         self.is_obstacle = msg.data
         if(self.is_obstacle):
             rospy.logwarn("Warning!! Vehicle in Hazard!")
@@ -183,10 +189,36 @@ class IONIQ:
         #         self.light_right = 0
         #         self.light_count = 0
         if(self.is_obstacle):
-            self.brake = 0.5
+            self.brake = 30
             self.accel = 0
             rospy.logwarn("Obstacle! Hazard Detect!")
             
+        if(self.is_finish):
+            for i in range(100):
+                self.brake = i
+                self.steer = 0
+                self.accel = 0
+                self.alv_cnt = alive_counter(self.alv_cnt)
+                
+                signals = {'PA_Enable': self.PA_enable, 'PA_StrAngCmd': self.steer,
+                        'LON_Enable': self.LON_enable, 'Target_Brake': self.brake, 'Target_Accel': self.accel, 
+                        'Alive_cnt': self.alv_cnt, 'Reset_Flag': self.reset,
+                        'TURN_SIG_LEFT': self.light_left, 'TURN_SIG_RIGHT': self.light_right
+                        }
+                                
+                msg = self.db.encode_message('Control', signals)
+                self.sender(0x210, msg)
+            
+            signals = {'PA_Enable': 0, 'PA_StrAngCmd': 0,
+                    'LON_Enable': 0, 'Target_Brake': 0, 'Target_Accel': 0, 
+                    'Alive_cnt': self.alv_cnt, 'Reset_Flag': self.reset,
+                    'TURN_SIG_LEFT': self.light_left, 'TURN_SIG_RIGHT': self.light_right
+                    }
+            msg = self.db.encode_message('Control', signals)
+            self.sender(0x210, msg)
+            
+            return
+
         msg = self.db.encode_message('Control', signals)
         self.sender(0x210, msg)
 

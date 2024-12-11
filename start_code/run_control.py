@@ -195,7 +195,7 @@ class Start:
         self.actuator_pub = rospy.Publisher('/target_actuator', Vector3, queue_size=10)
         self.light_pub = rospy.Publisher('vehicle/left_signal', Float32, queue_size =10)
         self.global_odom_pub = rospy.Publisher('/global_odom_frame_point',Marker,queue_size=10)
-
+        self.laps_complete_pub = rospy.Publisher('/laps_completed',Bool,queue_size=10)
 
         self.curr_v = 0
         self.pose = PoseStamped()
@@ -400,6 +400,15 @@ class Start:
                 continue
 
             waypoint_sec = self.find_waypoint_section(self.curr_lat, self.curr_lon, waypoint_sections)
+            if waypoint_sec == 8:
+                msg = Bool()
+                msg.data = Tru
+                for i in range(50):
+                    rospy.loginfo("LAPS COMPLETED, AUTONOMOUS MODE DISABLE!!!")
+                    rate.sleep()
+                self.laps_complete_pub(msg)
+                break
+
             self.curr_v = (self.rl_v + self.rr_v)/7.2
             if  self.global_pose_x is not None and self.global_pose_y is not None and self.global_waypoints_x is not None and self.global_waypoints_y is not None and waypoint_sec != -1:
                 waypoint_x = self.global_waypoints_x
