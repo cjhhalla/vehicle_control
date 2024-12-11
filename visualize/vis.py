@@ -49,7 +49,7 @@ class RVizVisualization:
 
     def point_callback(self, msg):
         self.current_point.x = msg.pose.position.x 
-        self.current_point.y = msg.pose.position.y
+        self.current_point.y = msg.pose.position.y 
 
     def actuator_callback(self, msg):
         self.target_accel = msg.x
@@ -64,16 +64,16 @@ class RVizVisualization:
         self.curr_v = (self.rl_v + self.rr_v)/7.2
         # Publish text markers
         if self.target_waypoint == 0:
-            self.publish_text_marker("global waypoint", 0, 3, 3, marker_id=1)
+            self.publish_text_marker("global waypoint", 0, 4, 3, marker_id=1)
             self.publish_global_point_marker()
         elif self.target_waypoint == 1:
-            self.publish_text_marker("local waypoint", 0, 3, 3, marker_id=1)
+            self.publish_text_marker("local waypoint", 0, 4, 3, marker_id=1)
             self.publish_point_marker()
-        self.publish_text_marker(f"Actuator [%]: {self.target_accel: f}",0, 3, 4, marker_id = 2)
-        self.publish_text_marker(f"Steering angle [deg]: {self.target_steer:.2f}", 0, 3, 5, marker_id=3)
-        self.publish_text_marker(f"Steering wheel angle [deg]: {self.target_steer * 12:.2f}", 0, 3, 6, marker_id=4)
-        self.publish_text_marker(f"Real Steering wheel angle [deg]: {self.steer:.2f}", 0, 3, 7, marker_id=5)
-        self.publish_text_marker(f"current velocity [m/s]: {self.curr_v:.2f}", 0, 3, 8, marker_id=6)
+        self.publish_text_marker(f"Actuator [%]: {self.target_accel: f}",0, 4, 4, marker_id = 2)
+        self.publish_text_marker(f"Steering angle [deg]: {self.target_steer:.2f}", 0, 4, 5, marker_id=3)
+        self.publish_text_marker(f"Steering wheel angle [deg]: {self.target_steer * 12:.2f}", 0, 4, 6, marker_id=4)
+        self.publish_text_marker(f"Real Steering wheel angle [deg]: {self.steer:.2f}", 0, 4, 7, marker_id=5)
+        self.publish_text_marker(f"current velocity [m/s]: {self.curr_v:.2f}", 0, 4, 8, marker_id=6)
         
 
     def publish_point_marker(self):
@@ -91,9 +91,9 @@ class RVizVisualization:
         point_marker.pose.orientation.y = 0.0
         point_marker.pose.orientation.z = 0.0
         point_marker.pose.orientation.w = 1.0
-        point_marker.scale.x = 0.5
-        point_marker.scale.y = 0.5
-        point_marker.scale.z = 0.5
+        point_marker.scale.x = 1
+        point_marker.scale.y = 1
+        point_marker.scale.z = 1
 
         # Color
         point_marker.color.a = 1.0  # Fully opaque
@@ -119,9 +119,9 @@ class RVizVisualization:
         point_marker.pose.orientation.y = 0.0
         point_marker.pose.orientation.z = 0.0
         point_marker.pose.orientation.w = 1.0
-        point_marker.scale.x = 0.5
-        point_marker.scale.y = 0.5
-        point_marker.scale.z = 0.5
+        point_marker.scale.x = 1
+        point_marker.scale.y = 1
+        point_marker.scale.z = 1
 
         # Color
         point_marker.color.a = 1.0  # Fully opaque
@@ -142,7 +142,7 @@ class RVizVisualization:
         heading_marker.action = Marker.ADD
 
         # Arrow properties
-        arrow_length = 2.0  # Length of the arrow (can be adjusted)
+        arrow_length = 6  # Length of the arrow (can be adjusted)
         
         # Calculate end point based on self.target_steer
         # Assuming self.target_steer is in degrees, convert to radians
@@ -161,9 +161,9 @@ class RVizVisualization:
         heading_marker.points.append(Point(end_x, end_y, end_z))  # End point (calculated based on steer angle)
 
         # Scale and color
-        heading_marker.scale.x = 0.1  # Shaft diameter
-        heading_marker.scale.y = 0.2  # Arrowhead diameter
-        heading_marker.scale.z = 0.2  # Arrowhead length
+        heading_marker.scale.x = 0.25  # Shaft diameter
+        heading_marker.scale.y = 0.5  # Arrowhead diameter
+        heading_marker.scale.z = 0.5  # Arrowhead length
 
         heading_marker.color.a = 1.0  # Fully opaque
         heading_marker.color.r = 0.0
@@ -197,8 +197,8 @@ class RVizVisualization:
 
         # Text color
         text_marker.color.a = 1.0  # Fully opaque
-        text_marker.color.r = 0.0
-        text_marker.color.g = 0.0
+        text_marker.color.r = 1.0
+        text_marker.color.g = 1.0
         text_marker.color.b = 1.0
 
         # Text content

@@ -15,8 +15,8 @@ Have to run novatel (GNSS)
 
 /start_code/can2morai.py 
 
-## 77 -> autonomous mode
-## 1001 -> reset processing
+77 -> autonomous mode
+1001 -> reset processing
 
 roslaunch setting.launch
 
