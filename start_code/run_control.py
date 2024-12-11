@@ -66,6 +66,10 @@ waypoints = [
     (37.382606, 126.653430),
     (37.382614, 126.653463),
     (37.382632, 126.653498),
+    (37.382645, 126.653519),
+    (37.382664, 126.653538),
+    (37.382687, 126.653560),
+    (37.382717, 126.653590),
     ## 7
     (37.383053, 126.653905),
     (37.383119, 126.653969),
@@ -85,19 +89,16 @@ waypoint_sections = {
     3: waypoints[20:24],  # #3 (20~23)
     4: waypoints[24:28],  # #4 (24~27)
     5: waypoints[28:32],  # #5 (28~31)
-    6: waypoints[32:43],  # #6 (32~43)
-    7: waypoints[43:47],  # #7 (44~47)
-    8: waypoints[47::],  # #8 (48~57)
+    6: waypoints[32:46],  # #6 (32~45)
+    7: waypoints[46:50],  # #7 (46~49)
+    8: waypoints[50:58],  # #8 (50~57)
 }
-
-
-
 
 class PurePursuit:
     def __init__(self):
         self.L = 3
-        self.k = 0.1  # 0.1~1
-        self.Lfc = 5.4 
+        self.k = 0.14  # 0.1~1
+        self.Lfc = 6 
         self.alpha = 1.5
     def euc_distance(self, pt1, pt2):
         return norm([pt2[0] - pt1[0], pt2[1] - pt1[1]])
@@ -259,8 +260,8 @@ class Start:
 
     def point_callback(self,msg):
         self.current_point = Point()
-        self.current_point.x = msg.pose.position.x 
-        self.current_point.y = msg.pose.position.y + 0.09
+        self.current_point.x = msg.pose.position.x + 0.6
+        self.current_point.y = msg.pose.position.y + 0.1
 
         # self.point_history_x.append(self.current_point.x)
         # self.point_history_y.append(self.current_point.y)
@@ -316,18 +317,36 @@ class Start:
                 return idx
         return None
 
-    def find_waypoint_section(self, curr_lat, curr_lon, sections, threshold=10) :
+    # def find_waypoint_section(self, curr_lat, curr_lon, sections, threshold=10) :
+    #     curr_position = (curr_lat, curr_lon)
+
+    #     for section_id, waypoints in sections.items():
+    #         last_waypoint = waypoints[-1]
+
+    #         for i,waypoint in enumerate(waypoints):
+    #             distance = geodesic(curr_position, waypoint).meters
+    #             if i== len(waypoint) -1 and distance <=1:
+    #                 return -1
+    #             if distance <= threshold:
+    #                 return section_id  
+
+    #     return -1
+
+    def find_waypoint_section(self, curr_lat, curr_lon, sections, threshold=7, exit_distance=2):
+        
         curr_position = (curr_lat, curr_lon)
 
         for section_id, waypoints in sections.items():
-            last_waypoint = waypoints[-1]
+            last_waypoint = waypoints[-1]  
+            distance_to_last = geodesic(curr_position, last_waypoint).meters
 
-            for i,waypoint in enumerate(waypoints):
+            if distance_to_last <= exit_distance:
+                return -1
+
+            for waypoint in waypoints[:-1]:  
                 distance = geodesic(curr_position, waypoint).meters
-                if i== len(waypoint) -1 and distance <=1:
-                    return -1
                 if distance <= threshold:
-                    return section_id  
+                    return section_id
 
         return -1
 
@@ -382,7 +401,6 @@ class Start:
 
             waypoint_sec = self.find_waypoint_section(self.curr_lat, self.curr_lon, waypoint_sections)
             self.curr_v = (self.rl_v + self.rr_v)/7.2
-            # rospy.loginfo(f"current velocity: {self.curr_v}")
             if  self.global_pose_x is not None and self.global_pose_y is not None and self.global_waypoints_x is not None and self.global_waypoints_y is not None and waypoint_sec != -1:
                 waypoint_x = self.global_waypoints_x
                 waypoint_y = self.global_waypoints_y
@@ -447,7 +465,7 @@ class Start:
                 rospy.loginfo(f"accel value: {accel}")
                 rospy.loginfo(f"steer value: {steer}")
                 self.actuator_pub.publish(temp)
-                self.current_point = None
+                # self.current_point = None
 
             else:
                 # rospy.logwarn("No waypoints or current_point available. Skipping loop.")
