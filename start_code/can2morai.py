@@ -176,15 +176,16 @@ class IONIQ:
                    'Alive_cnt': self.alv_cnt, 'Reset_Flag': self.reset,
                    'TURN_SIG_LEFT': self.light_left, 'TURN_SIG_RIGHT': self.light_right
                    }
-        if(self.light_left or self.light_right):
-            self.light_count +=1
-            if(self.light_count > 100):
-                self.light_left = 0
-                self.light_right = 0
-                self.light_count = 0
+        # if(self.light_left or self.light_right):
+        #     self.light_count +=1
+        #     if(self.light_count > 100):
+        #         self.light_left = 0
+        #         self.light_right = 0
+        #         self.light_count = 0
         if(self.is_obstacle):
             self.brake = 0.5
             self.accel = 0
+            rospy.logwarn("Obstacle! Hazard Detect!")
             
         msg = self.db.encode_message('Control', signals)
         self.sender(0x210, msg)
@@ -355,7 +356,7 @@ class IONIQ:
                     self.reset_trigger()
                     self.PA_enable = 1
                     self.LON_enable = 1
-                    self.brake = 100
+                    self.brake = 40
                     self.steer = 0
                     self.accel = 0
                     self.reset = 0
