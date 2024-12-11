@@ -92,6 +92,9 @@ waypoint_sections = {
     6: waypoints[32:46],  # #6 (32~45)
     7: waypoints[46:50],  # #7 (46~49)
     8: waypoints[50:58],  # #8 (50~57)
+    6: waypoints[32:43],  # #6 (32~43)
+    7: waypoints[43:47],  # #7 (44~47)
+    8: waypoints[47:51],  # #8 (48~57)
 }
 
 class PurePursuit:
@@ -345,6 +348,8 @@ class Start:
 
             for waypoint in waypoints[:-1]:  
                 distance = geodesic(curr_position, waypoint).meters
+                if i== len(waypoint) -1 and distance <=4:
+                    return -1
                 if distance <= threshold:
                     return section_id
 
@@ -450,7 +455,7 @@ class Start:
                 
                 yaw = self.yaw_rate
                 rospy.loginfo(f"current velocity: {self.curr_v}")
-                target_steering, target_position = self.pure_pursuit.run(self.curr_v, waypoint, position, yaw,self.curr_steer)
+                target_steering, target_position = self.pure_pursuit.run(self.curr_v, waypoint, position, 0, self.curr_steer)
                 current_speed = self.curr_v
                 throttle = self.pid.run(target_position, position)
                 throttle *= 0.75

@@ -101,7 +101,7 @@ Visualization Manager:
       Marker Topic: /target_points
       Name: MarkerArray
       Namespaces:
-        {}
+        target_points: true
       Queue Size: 100
       Value: true
     - Class: rviz/Image
@@ -160,9 +160,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5103998184204102
+      Pitch: 0.48539984226226807
       Target Frame: <Fixed Frame>
-      Yaw: 3.067213296890259
+      Yaw: 3.1122138500213623
     Saved: ~
 Window Geometry:
   Displays:
