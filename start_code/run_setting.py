@@ -17,6 +17,7 @@ from novatel_oem7_msgs.msg import BESTGNSSPOS
 class PathTracker:
     def __init__(self, waypoints):
         self.waypoint = waypoints
+        self.store_waypoint = waypoints
         self.marker_pub = rospy.Publisher('/ego_waypoint', Marker, queue_size=10)
         self.marker_gps_pub = rospy.Publisher('/ego_gps_waypoint', Marker, queue_size=10)
         self.point_gps_pub = rospy.Publisher('/point_globak_waypoint', Point, queue_size=10)
@@ -399,6 +400,8 @@ class PathTracker:
             self.global_wp_pub.publish(marker)
             self.waypoint.pop(closest_idx)
             rospy.loginfo("Pop global waypoint")
+            if len(self.waypoint) == 0:
+            	self.waypoint = self.store_waypoints
 
     def run_setting_loop(self):
         rate = rospy.Rate(20)  # 20 Hz

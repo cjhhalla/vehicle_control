@@ -3,7 +3,7 @@
 import rospy
 from geometry_msgs.msg import Point
 from visualization_msgs.msg import Marker
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, Bool
 from geometry_msgs.msg import Vector3
 import math
 
@@ -21,6 +21,8 @@ class RVizVisualization:
         rospy.Subscriber('/vehicle/steering_angle', Float32, self.steer_callback)
         rospy.Subscriber('/vehicle/velocity_RL', Float32, self.rl_callback)
         rospy.Subscriber('/vehicle/velocity_RR', Float32, self.rr_callback)
+        rospy.Subscriber('/mobinha/hazard_warning',Bool, self.lidar_warn)
+        rospy.Subscriber('/mobinha/is_crossroad', Bool, self.vision_warn)
         # Variables to store received data
         self.current_point = Point()
         self.global_current_point = Point()
@@ -32,6 +34,15 @@ class RVizVisualization:
         self.steer = 0
         self.rr_v = 0
         self.rl_v = 0
+        
+        self.lidar = False
+        self.vision = False
+    
+    def lidar_warn(self,msg):
+    	self.lidar = msg.data
+    
+    def vision_warn(self,msg):
+    	self.vision = msg.data
 
     def steer_callback(self,msg):
         self.steer = msg.data
@@ -61,6 +72,16 @@ class RVizVisualization:
         # Publish heading marker
         self.publish_heading_marker()
         self.curr_v = (self.rl_v + self.rr_v)/7.2
+        if not self.lidar:
+        	self.publish_text_marker("Non Obstacle",0,4,7, marker_id = 5)
+        else:
+        	self.publish_text_marker("Obstacle Warning!!",0,4,7, marker_id = 5)
+        
+        if not self.vision:
+        	self.publish_text_marker("Non Signal",0,4,8, marker_id = 6)
+        else:
+        	self.publish_text_marker("Signal Detect!!",0,4,8, marker_id = 6)
+        
         # Publish text markers
         if self.target_waypoint == 0:
             self.publish_text_marker("GPS MODE", 0, 4, 3, marker_id=1)
@@ -69,10 +90,8 @@ class RVizVisualization:
             self.publish_text_marker("VISION MODE", 0, 4, 3, marker_id=1)
             self.publish_point_marker()
         self.publish_text_marker(f"Actuator [%]: {self.target_accel: f}",0, 4, 4, marker_id = 2)
-        self.publish_text_marker(f"Steering angle [deg]: {self.target_steer:.2f}", 0, 4, 5, marker_id=3)
-        self.publish_text_marker(f"Steering wheel angle [deg]: {self.target_steer * 12:.2f}", 0, 4, 6, marker_id=4)
-        self.publish_text_marker(f"Real Steering wheel angle [deg]: {self.steer:.2f}", 0, 4, 7, marker_id=5)
-        self.publish_text_marker(f"current velocity [m/s]: {self.curr_v:.2f}", 0, 4, 8, marker_id=6)
+        self.publish_text_marker(f"Steering wheel angle [deg]: {self.target_steer * 12:.2f}", 0, 4, 5, marker_id=3)
+        self.publish_text_marker(f"current velocity [m/s]: {self.curr_v:.2f}", 0, 4, 6, marker_id=4)
         
 
     def publish_point_marker(self):
@@ -192,7 +211,7 @@ class RVizVisualization:
         text_marker.pose.orientation.w = 1.0
 
         # Text scale (size)
-        text_marker.scale.z = 0.5  # Font size
+        text_marker.scale.z = 0.7  # Font size
 
         # Text color
         text_marker.color.a = 1.0  # Fully opaque

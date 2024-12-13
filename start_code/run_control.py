@@ -266,7 +266,7 @@ class Start:
     def point_callback(self,msg):
         self.current_point = Point()
         self.current_point.x = msg.pose.position.x + 0.6
-        self.current_point.y = msg.pose.position.y + 0.1
+        self.current_point.y = msg.pose.position.y + 0.2
 
         # self.point_history_x.append(self.current_point.x)
         # self.point_history_y.append(self.current_point.y)
@@ -390,14 +390,6 @@ class Start:
                 continue
 
             waypoint_sec = self.find_waypoint_section(self.curr_lat, self.curr_lon, waypoint_sections)
-            if waypoint_sec == 8:
-                msg = Bool()
-                msg.data = True
-                for i in range(10):
-                    rospy.loginfo("LAPS COMPLETED, AUTONOMOUS MODE DISABLE!!!")
-                    rate.sleep()
-                self.laps_complete_pub(msg)
-                break
 
             self.curr_v = (self.rl_v + self.rr_v)/7.2
             if  self.global_pose_x is not None and self.global_pose_y is not None and self.global_waypoints_x is not None and self.global_waypoints_y is not None and waypoint_sec != -1:
@@ -418,24 +410,6 @@ class Start:
                 throttle = self.pid.run(target_position, position)
                 throttle = np.clip(throttle,0,10)
                 accel = throttle
-
-                if waypoint_sec == 0 and not self.cross_zero:
-                    msg = Bool()
-                    msg.data = True
-                    for i in range(20):
-                        self.cross_pub.publish(msg)
-                        rate.sleep()                        
-                    self.cross_zero = True
-                    continue
-
-                if waypoint_sec == 6 and not self.cross_six:
-                    msg = Bool()
-                    msg.data = True
-                    for i in range(20):
-                        self.cross_pub.publish(msg)
-                        rate.sleep()
-                    self.cross_six = True
-                    continue
 
                 if waypoint_sec == 6:
                     light = Float32()

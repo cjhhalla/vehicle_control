@@ -182,8 +182,27 @@ class IONIQ:
             self.brake = 30
             self.accel = 0
             rospy.logwarn("Obstacle! Hazard Detect!")
-        # else:
-        #     self.brake = 0
+            signals = {'PA_Enable': self.PA_enable, 'PA_StrAngCmd': self.steer,
+                        'LON_Enable': self.LON_enable, 'Target_Brake': self.brake, 'Target_Accel': self.accel, 
+                        'Alive_cnt': self.alv_cnt, 'Reset_Flag': self.reset,
+                        'TURN_SIG_LEFT': self.light_left, 'TURN_SIG_RIGHT': self.light_right
+                        }
+            msg = self.db.encode_message('Control', signals)
+            self.sender(0x210, msg)
+            time.sleep(0.05)
+            self.brake = 60
+            self.accel = 0
+            rospy.logwarn("Obstacle! Hazard Detect!")
+            signals = {'PA_Enable': self.PA_enable, 'PA_StrAngCmd': self.steer,
+                        'LON_Enable': self.LON_enable, 'Target_Brake': self.brake, 'Target_Accel': self.accel, 
+                        'Alive_cnt': self.alv_cnt, 'Reset_Flag': self.reset,
+                        'TURN_SIG_LEFT': self.light_left, 'TURN_SIG_RIGHT': self.light_right
+                        }
+            msg = self.db.encode_message('Control', signals)
+            self.sender(0x210, msg)
+        else:
+            self.brake = 0
+            self.is_obstacle = False
 
         if(self.is_finish):
             for i in range(70):
@@ -204,15 +223,17 @@ class IONIQ:
 
             self.PA_enable = 0
             self.LON_enable = 0
-        # else:
-        #     self.brake = 0
+        else:
+            self.brake = 0
+            self.is_finish = False
 
         if(self.is_crossroad):
             self.brake = 30
             self.accel = 0
             rospy.logwarn("Now Vehicle on Crossroad!")
-        # else:
-        #     self.brake = 0
+        else:
+            self.brake = 0
+            self.is_crossroad = False
 
         self.alv_cnt = alive_counter(self.alv_cnt)
         signals = {'PA_Enable': self.PA_enable, 'PA_StrAngCmd': self.steer,
