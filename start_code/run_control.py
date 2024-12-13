@@ -196,6 +196,8 @@ class Start:
         self.light_pub = rospy.Publisher('/vehicle/left_signal', Float32, queue_size =10)
         self.global_odom_pub = rospy.Publisher('/global_odom_frame_point',Marker,queue_size=10)
         self.laps_complete_pub = rospy.Publisher('/laps_completed',Bool,queue_size=10)
+        self.cross_pub = rospy.Publisher('/mobinha/is_crossroad',Bool, queue_size = 10)
+
 
         self.curr_v = 0
         self.pose = PoseStamped()
@@ -222,6 +224,9 @@ class Start:
         
         self.curr_steer = 0
         self.inter_steer = 0
+
+        self.cross_zero = False
+        self.cross_six = False
 
     def steer_callback(self,msg):
         self.curr_steer = msg.data
@@ -413,6 +418,25 @@ class Start:
                 throttle = self.pid.run(target_position, position)
                 throttle = np.clip(throttle,0,10)
                 accel = throttle
+
+                if waypoint_sec == 0 and not self.cross_zero:
+                    msg = Bool()
+                    msg.data = True
+                    for i in range(20):
+                        self.cross_pub.publish(msg)
+                        rate.sleep()                        
+                    self.cross_zero = True
+                    continue
+
+                if waypoint_sec == 6 and not self.cross_six:
+                    msg = Bool()
+                    msg.data = True
+                    for i in range(20):
+                        self.cross_pub.publish(msg)
+                        rate.sleep()
+                    self.cross_six = True
+                    continue
+
                 if waypoint_sec == 6:
                     light = Float32()
                     light.data = 1
