@@ -317,21 +317,6 @@ class Start:
                 return idx
         return None
 
-    # def find_waypoint_section(self, curr_lat, curr_lon, sections, threshold=10) :
-    #     curr_position = (curr_lat, curr_lon)
-
-    #     for section_id, waypoints in sections.items():
-    #         last_waypoint = waypoints[-1]
-
-    #         for i,waypoint in enumerate(waypoints):
-    #             distance = geodesic(curr_position, waypoint).meters
-    #             if i== len(waypoint) -1 and distance <=1:
-    #                 return -1
-    #             if distance <= threshold:
-    #                 return section_id  
-
-    #     return -1
-
     def find_waypoint_section(self, curr_lat, curr_lon, sections, threshold=7, exit_distance=2):
         
         curr_position = (curr_lat, curr_lon)
@@ -483,19 +468,15 @@ class Start:
                 throttle = np.clip(throttle,0,10)
                 accel = throttle
                 steer = target_steering * self.steer_ratio
-                    
-                steer_interpolate = np.linspace(self.inter_steer, steer, 3)
 
-                for s in steer_interpolate:
-                    temp = Vector3()
-                    temp.x = accel
-                    temp.y = s
-                    temp.z = 1
-                    rospy.loginfo("Using Local Waypoint")
-                    rospy.loginfo(f"accel value: {accel}")
-                    rospy.loginfo(f"steer value: {steer}")
-                    self.actuator_pub.publish(temp)
-                    rate.sleep()
+                temp = Vector3()
+                temp.x = accel
+                temp.y = steer
+                temp.z = 1
+                rospy.loginfo("Using Local Waypoint")
+                rospy.loginfo(f"accel value: {accel}")
+                rospy.loginfo(f"steer value: {steer}")
+                self.actuator_pub.publish(temp)
                     
                 self.inter_steer = steer    
                 light = Float32()

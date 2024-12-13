@@ -13,10 +13,6 @@ import rospkg
 def alive_counter(alv_cnt):
     return (alv_cnt + 1) % 256
 
-# rospack = rospkg.RosPack()
-# pack_path = rospack.get_path('capstone')
-# dbc_path = f"{pack_path}/dbc/can.dbc"
-
 class IONIQ:
     def __init__(self):
         rospy.init_node("CAN_CONVERTER")
