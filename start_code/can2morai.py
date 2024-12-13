@@ -182,6 +182,8 @@ class IONIQ:
             self.brake = 30
             self.accel = 0
             rospy.logwarn("Obstacle! Hazard Detect!")
+        # else:
+        #     self.brake = 0
 
         if(self.is_finish):
             for i in range(70):
@@ -202,11 +204,15 @@ class IONIQ:
 
             self.PA_enable = 0
             self.LON_enable = 0
+        # else:
+        #     self.brake = 0
 
         if(self.is_crossroad):
             self.brake = 30
             self.accel = 0
             rospy.logwarn("Now Vehicle on Crossroad!")
+        # else:
+        #     self.brake = 0
 
         self.alv_cnt = alive_counter(self.alv_cnt)
         signals = {'PA_Enable': self.PA_enable, 'PA_StrAngCmd': self.steer,
@@ -217,6 +223,8 @@ class IONIQ:
 
         msg = self.db.encode_message('Control', signals)
         self.sender(0x210, msg)
+
+        
 
     def longitudinal_rcv(self):
         data = self.bus.recv()
@@ -338,6 +346,7 @@ class IONIQ:
                 cmd = input('77: ALL\n \
                             66 : Kill car\n \
                             55 : Stop\n \
+                            88 : Stop strong\n \
                             44 : Move\n \
                             1001: reset\n')
                 cmd = int(cmd)
@@ -351,11 +360,12 @@ class IONIQ:
                     rospy.logwarn("Not available... Re-Insert")
                 elif cmd == 88:
                     self.reset_trigger()
-                    # self.PA_enable = 0
-                    # self.LON_enable = 1
-                    # self.brake = 0
-                    # self.accel = 0
-                    # self.reset = 0
+                    self.PA_enable = 1
+                    self.LON_enable = 1
+                    self.brake = 70
+                    self.accel = 0
+                    self.steer = 0
+                    self.reset = 0
                     rospy.logwarn("Not available... Re-Insert")
                 elif cmd == 77: 
                     self.reset_trigger()
