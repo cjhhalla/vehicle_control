@@ -131,11 +131,13 @@ class IONIQ:
 
         self.sub_actuator = rospy.Subscriber('/target_actuator', Vector3, self.actu_cb)
 
-        rospy.Subscriber('vehicle/left_signal', Float32, self.light_cb)
+        rospy.Subscriber('/vehicle/left_signal', Float32, self.light_cb)
     
         rospy.Subscriber('/mobinha/hazard_warning', Bool, self.obstacle_cb)
 
         rospy.Subscriber('/laps_completed',Bool, self.laps_cb)
+
+        rospy.Subscriber('/mobinha/is_crossroad',Bool, self.cross_cb)
 
         self.light_left = 0
         self.light_right = 0
@@ -143,6 +145,10 @@ class IONIQ:
 
         self.is_obstacle = False
         self.is_finish = False
+        self.is_crossroad = False
+        
+    def cross_cb(self,msg):
+        self.is_crossroad = msg.data
 
     def laps_cb(self,msg):
         self.is_finish = msg.data
@@ -176,26 +182,14 @@ class IONIQ:
         self.reset = 1
 
     def longitudinal_cmd(self):
-        self.alv_cnt = alive_counter(self.alv_cnt)
-        signals = {'PA_Enable': self.PA_enable, 'PA_StrAngCmd': self.steer,
-                   'LON_Enable': self.LON_enable, 'Target_Brake': self.brake, 'Target_Accel': self.accel, 
-                   'Alive_cnt': self.alv_cnt, 'Reset_Flag': self.reset,
-                   'TURN_SIG_LEFT': self.light_left, 'TURN_SIG_RIGHT': self.light_right
-                   }
-        # if(self.light_left or self.light_right):
-        #     self.light_count +=1
-        #     if(self.light_count > 100):
-        #         self.light_left = 0
-        #         self.light_right = 0
-        #         self.light_count = 0
         if(self.is_obstacle):
             self.brake = 30
             self.accel = 0
             rospy.logwarn("Obstacle! Hazard Detect!")
-            
+
         if(self.is_finish):
-            for i in range(100):
-                self.brake = i
+            for i in range(70):
+                self.brake = i 
                 self.steer = 0
                 self.accel = 0
                 self.alv_cnt = alive_counter(self.alv_cnt)
@@ -208,20 +202,25 @@ class IONIQ:
                                 
                 msg = self.db.encode_message('Control', signals)
                 self.sender(0x210, msg)
-            
-            signals = {'PA_Enable': 0, 'PA_StrAngCmd': 0,
-                    'LON_Enable': 0, 'Target_Brake': 0, 'Target_Accel': 0, 
-                    'Alive_cnt': self.alv_cnt, 'Reset_Flag': self.reset,
-                    'TURN_SIG_LEFT': self.light_left, 'TURN_SIG_RIGHT': self.light_right
-                    }
-            msg = self.db.encode_message('Control', signals)
-            self.sender(0x210, msg)
-            
-            return
+                time.sleep(0.03)
+
+            self.PA_enable = 0
+            self.LON_enable = 0
+
+        if(self.is_crossroad):
+            self.brake = 30
+            self.accel = 0
+            rospy.logwarn("Now Vehicle on Crossroad!")
+
+        self.alv_cnt = alive_counter(self.alv_cnt)
+        signals = {'PA_Enable': self.PA_enable, 'PA_StrAngCmd': self.steer,
+                   'LON_Enable': self.LON_enable, 'Target_Brake': self.brake, 'Target_Accel': self.accel, 
+                   'Alive_cnt': self.alv_cnt, 'Reset_Flag': self.reset,
+                   'TURN_SIG_LEFT': self.light_left, 'TURN_SIG_RIGHT': self.light_right
+                   }
 
         msg = self.db.encode_message('Control', signals)
         self.sender(0x210, msg)
-
 
     def longitudinal_rcv(self):
         data = self.bus.recv()
@@ -366,8 +365,8 @@ class IONIQ:
                     self.reset_trigger()
                     self.PA_enable = 1
                     self.LON_enable = 1
-                    self.light_left = 1
-                    self.light_right = 1
+                    self.light_left = 0
+                    self.light_right = 0
                     self.brake = 0
                     self.accel = 0
                     self.reset = 0

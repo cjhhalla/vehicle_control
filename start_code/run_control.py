@@ -193,7 +193,7 @@ class Start:
         self.rr_sub = rospy.Subscriber('/vehicle/velocity_RR', Float32, self.rr_callback)
         self.steer_sub = rospy.Subscriber('/vehicle/steering_angle', Float32, self.steer_callback)
         self.actuator_pub = rospy.Publisher('/target_actuator', Vector3, queue_size=10)
-        self.light_pub = rospy.Publisher('vehicle/left_signal', Float32, queue_size =10)
+        self.light_pub = rospy.Publisher('/vehicle/left_signal', Float32, queue_size =10)
         self.global_odom_pub = rospy.Publisher('/global_odom_frame_point',Marker,queue_size=10)
         self.laps_complete_pub = rospy.Publisher('/laps_completed',Bool,queue_size=10)
 
@@ -402,8 +402,8 @@ class Start:
             waypoint_sec = self.find_waypoint_section(self.curr_lat, self.curr_lon, waypoint_sections)
             if waypoint_sec == 8:
                 msg = Bool()
-                msg.data = Tru
-                for i in range(50):
+                msg.data = True
+                for i in range(10):
                     rospy.loginfo("LAPS COMPLETED, AUTONOMOUS MODE DISABLE!!!")
                     rate.sleep()
                 self.laps_complete_pub(msg)
@@ -426,9 +426,6 @@ class Start:
                 rospy.loginfo(f"current velocity: {self.curr_v}")
                 target_steering, target_position = self.pure_pursuit.run_global(self.curr_v, waypoint, position, yaw,self.curr_steer)
                 throttle = self.pid.run(target_position, position)
-                # throttle *= 0.7
-                # throttle = np.clip(throttle,0,6.5)
-            
                 throttle = np.clip(throttle,0,10)
                 accel = throttle
                 if waypoint_sec == 6:
@@ -473,21 +470,21 @@ class Start:
             elif self.current_point is not None and waypoint_sec == -1:
                 
                 way_x = self.current_point.x
-                way_y = self.current_point.y 
+                way_y = self.current_point.y
+
                 position = (0, 0)
                 waypoint = (way_x, way_y)
                 
                 yaw = self.yaw_rate
                 rospy.loginfo(f"current velocity: {self.curr_v}")
                 target_steering, target_position = self.pure_pursuit.run(self.curr_v, waypoint, position, 0 ,self.curr_steer)
-                current_speed = self.curr_v
+                
                 throttle = self.pid.run(target_position, position)
-                # throttle *= 0.75
                 throttle = np.clip(throttle,0,10)
                 accel = throttle
                 steer = target_steering * self.steer_ratio
                     
-                steer_interpolate = np.linspace(self.inter_steer, steer, 5)
+                steer_interpolate = np.linspace(self.inter_steer, steer, 3)
 
                 for s in steer_interpolate:
                     temp = Vector3()
@@ -500,21 +497,10 @@ class Start:
                     self.actuator_pub.publish(temp)
                     rate.sleep()
                     
-                self.inter_steer = steer
-                    
+                self.inter_steer = steer    
                 light = Float32()
                 light.data = 0
                 self.light_pub.publish(light) 
-
-                # temp = Vector3()
-                # temp.x = accel
-                # temp.y = steer
-                # temp.z = 1
-                # rospy.loginfo("Using Local Waypoint")
-                # rospy.loginfo(f"accel value: {accel}")
-                # rospy.loginfo(f"steer value: {steer}")
-                # self.actuator_pub.publish(temp)
-                # self.current_point = None
 
             else:
                 rospy.logwarn("No waypoints or current_point available. Skipping loop.")

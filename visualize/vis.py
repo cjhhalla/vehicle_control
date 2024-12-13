@@ -14,7 +14,6 @@ class RVizVisualization:
         self.heading_marker_pub = rospy.Publisher('/rviz_heading_marker', Marker, queue_size=10)
         self.text_marker_pub = rospy.Publisher('/rviz_text_marker', Marker, queue_size=10)
         
-
         # ROS Subscriber
         rospy.Subscriber('/last_target_point', Marker, self.point_callback)
         rospy.Subscriber('/target_actuator', Vector3, self.actuator_callback)
@@ -64,10 +63,10 @@ class RVizVisualization:
         self.curr_v = (self.rl_v + self.rr_v)/7.2
         # Publish text markers
         if self.target_waypoint == 0:
-            self.publish_text_marker("global waypoint", 0, 4, 3, marker_id=1)
+            self.publish_text_marker("GPS MODE", 0, 4, 3, marker_id=1)
             self.publish_global_point_marker()
         elif self.target_waypoint == 1:
-            self.publish_text_marker("local waypoint", 0, 4, 3, marker_id=1)
+            self.publish_text_marker("VISION MODE", 0, 4, 3, marker_id=1)
             self.publish_point_marker()
         self.publish_text_marker(f"Actuator [%]: {self.target_accel: f}",0, 4, 4, marker_id = 2)
         self.publish_text_marker(f"Steering angle [deg]: {self.target_steer:.2f}", 0, 4, 5, marker_id=3)
