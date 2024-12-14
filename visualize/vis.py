@@ -6,13 +6,15 @@ from visualization_msgs.msg import Marker
 from std_msgs.msg import Float32
 from geometry_msgs.msg import Vector3
 import math
+from jsk_rviz_plugins.msg import OverlayText
+
 
 class RVizVisualization:
     def __init__(self):
         # ROS Publisher
         self.point_marker_pub = rospy.Publisher('/rviz_point_marker', Marker, queue_size=10)
         self.heading_marker_pub = rospy.Publisher('/rviz_heading_marker', Marker, queue_size=10)
-        self.text_marker_pub = rospy.Publisher('/rviz_text_marker', Marker, queue_size=10)
+        self.text_marker_pub = rospy.Publisher('/rviz_overlay_text_marker', OverlayText, queue_size=10)
         
         # ROS Subscriber
         rospy.Subscriber('/last_target_point', Marker, self.point_callback)
@@ -61,18 +63,19 @@ class RVizVisualization:
         # Publish heading marker
         self.publish_heading_marker()
         self.curr_v = (self.rl_v + self.rr_v)/7.2
+        self.publish_text_marker()
         # Publish text markers
-        if self.target_waypoint == 0:
-            self.publish_text_marker("GPS MODE", 0, 4, 3, marker_id=1)
-            self.publish_global_point_marker()
-        elif self.target_waypoint == 1:
-            self.publish_text_marker("VISION MODE", 0, 4, 3, marker_id=1)
-            self.publish_point_marker()
-        self.publish_text_marker(f"Actuator [%]: {self.target_accel: f}",0, 4, 4, marker_id = 2)
-        self.publish_text_marker(f"Steering angle [deg]: {self.target_steer:.2f}", 0, 4, 5, marker_id=3)
-        self.publish_text_marker(f"Steering wheel angle [deg]: {self.target_steer * 12:.2f}", 0, 4, 6, marker_id=4)
-        self.publish_text_marker(f"Real Steering wheel angle [deg]: {self.steer:.2f}", 0, 4, 7, marker_id=5)
-        self.publish_text_marker(f"current velocity [m/s]: {self.curr_v:.2f}", 0, 4, 8, marker_id=6)
+        # if self.target_waypoint == 0:
+        #     self.publish_text_marker("GPS MODE", 0, 4, 3, marker_id=1)
+        #     self.publish_global_point_marker()
+        # elif self.target_waypoint == 1:
+        #     self.publish_text_marker("VISION MODE", 0, 4, 3, marker_id=1)
+        #     self.publish_point_marker()
+        # self.publish_text_marker(f"Actuator [%]: {self.target_accel: f}",0, 4, 4, marker_id = 2)
+        # self.publish_text_marker(f"Steering angle [deg]: {self.target_steer:.2f}", 0, 4, 5, marker_id=3)
+        # self.publish_text_marker(f"Steering wheel angle [deg]: {self.target_steer * 12:.2f}", 0, 4, 6, marker_id=4)
+        # self.publish_text_marker(f"Real Steering wheel angle [deg]: {self.steer:.2f}", 0, 4, 7, marker_id=5)
+        # self.publish_text_marker(f"current velocity [m/s]: {self.curr_v:.2f}", 0, 4, 8, marker_id=6)
         
 
     def publish_point_marker(self):
@@ -172,39 +175,76 @@ class RVizVisualization:
         # Publish the marker
         self.heading_marker_pub.publish(heading_marker)
 
-    def publish_text_marker(self, text, position_x, position_y, position_z, marker_id):
-        text_marker = Marker()
-        text_marker.header.frame_id = "ego_car"
-        text_marker.header.stamp = rospy.Time.now()
-        text_marker.ns = "text_marker"
-        text_marker.id = marker_id
-        text_marker.type = Marker.TEXT_VIEW_FACING  # Text type marker
-        text_marker.action = Marker.ADD
+    # def publish_text_marker(self, text, position_x, position_y, position_z, marker_id):
+    #     text_marker = Marker()
+    #     text_marker.header.frame_id = "ego_car"
+    #     text_marker.header.stamp = rospy.Time.now()
+    #     text_marker.ns = "text_marker"
+    #     text_marker.id = marker_id
+    #     text_marker.type = Marker.TEXT_VIEW_FACING  # Text type marker
+    #     text_marker.action = Marker.ADD
 
-        # Position of the text
-        text_marker.pose.position.x = position_x
-        text_marker.pose.position.y = position_y
-        text_marker.pose.position.z = position_z + 1.0  # Slightly above the point
+    #     # Position of the text
+    #     text_marker.pose.position.x = position_x
+    #     text_marker.pose.position.y = position_y
+    #     text_marker.pose.position.z = position_z + 1.0  # Slightly above the point
 
-        text_marker.pose.orientation.x = 0.0
-        text_marker.pose.orientation.y = 0.0
-        text_marker.pose.orientation.z = 0.0
-        text_marker.pose.orientation.w = 1.0
+    #     text_marker.pose.orientation.x = 0.0
+    #     text_marker.pose.orientation.y = 0.0
+    #     text_marker.pose.orientation.z = 0.0
+    #     text_marker.pose.orientation.w = 1.0
 
-        # Text scale (size)
-        text_marker.scale.z = 0.5  # Font size
+    #     # Text scale (size)
+    #     text_marker.scale.z = 0.5  # Font size
 
-        # Text color
-        text_marker.color.a = 1.0  # Fully opaque
-        text_marker.color.r = 1.0
-        text_marker.color.g = 1.0
-        text_marker.color.b = 1.0
+    #     # Text color
+    #     text_marker.color.a = 1.0  # Fully opaque
+    #     text_marker.color.r = 1.0
+    #     text_marker.color.g = 1.0
+    #     text_marker.color.b = 1.0
 
-        # Text content
-        text_marker.text = text
+    #     # Text content
+    #     text_marker.text = text
 
-        # Publish the marker
-        self.text_marker_pub.publish(text_marker)
+    #     # Publish the marker
+    #     self.text_marker_pub.publish(text_marker)
+
+    def publish_text_marker(self):
+        overlay_text = OverlayText()
+        overlay_text.action = OverlayText.ADD
+        overlay_text.width = 450  # 오버레이 텍스트 너비
+        overlay_text.height = 180  # 오버레이 텍스트 높이
+        overlay_text.left = 10   # x 위치 조정
+        overlay_text.top = 200  # y 위치 조정
+        overlay_text.text_size = 14  # 글씨 크기
+        overlay_text.line_width = 2  # 글씨 외곽선 두께
+        overlay_text.font = "DejaVu Sansa Mono"
+        # 텍스트 내용
+
+        text_content = (
+            f"MODE: {'GPS MODE' if self.target_waypoint == 0 else 'VISION MODE'}\n"
+            f"Actuator [%]: {self.target_accel: .2f}\n"
+            f"Steering angle [deg]: {self.target_steer:.2f}\n"
+            f"Steering wheel angle [deg]: {self.target_steer * 12:.2f}\n"
+            f"Real Steering wheel angle [deg]: {self.steer:.2f}\n"
+            f"Current velocity [m/s]: {self.curr_v:.2f}"
+        )
+        overlay_text.text = text_content
+
+        # 텍스트 색상 설정 (RGBA)
+        overlay_text.fg_color.r = 0.0
+        overlay_text.fg_color.g = 1.0
+        overlay_text.fg_color.b = 0.0
+        overlay_text.fg_color.a = 1.0
+
+        # 배경 색상 설정 (RGBA)
+        overlay_text.bg_color.r = 0.0
+        overlay_text.bg_color.g = 0.0
+        overlay_text.bg_color.b = 0.0
+        overlay_text.bg_color.a = 0.5
+
+        # 오버레이 텍스트 발행
+        self.text_marker_pub.publish(overlay_text)
 
 
 if __name__ == '__main__':
