@@ -230,10 +230,10 @@ class RVizVisualization:
         overlay_text.width = 450  # 오버레이 텍스트 너비
         overlay_text.height = 200  # 오버레이 텍스트 높이
         overlay_text.left = 10   # x 위치 조정
-        overlay_text.top = 10  # y 위치 조정
+        overlay_text.top = 250  # y 위치 조정
         overlay_text.text_size = 14  # 글씨 크기
         overlay_text.line_width = 2  # 글씨 외곽선 두께
-        overlay_text.font = "DejaVu Sansa Mono"
+        overlay_text.font = "DejaVu Sans Mono"
         # 텍스트 내용
 
         text_content = (
