@@ -8,7 +8,7 @@ from std_msgs.msg import Float32, Bool
 from geometry_msgs.msg import Vector3
 import math
 from jsk_rviz_plugins.msg import OverlayText
-
+from vehicle_control.msg import Actuator
 
 class RVizVisualization:
     def __init__(self):
@@ -19,7 +19,7 @@ class RVizVisualization:
         
         # ROS Subscriber
         rospy.Subscriber('/last_target_point', Marker, self.point_callback)
-        rospy.Subscriber('/target_actuator', Vector3, self.actuator_callback)
+        rospy.Subscriber('/target_actuator', Actuator, self.actuator_callback)
         rospy.Subscriber('/global_odom_frame_point', Marker, self.global_callback)
         rospy.Subscriber('/vehicle/steering_angle', Float32, self.steer_callback)
         rospy.Subscriber('/vehicle/velocity_RL', Float32, self.rl_callback)
@@ -32,6 +32,7 @@ class RVizVisualization:
         self.target_accel = 0.0
         self.target_steer = 0.0 
         self.target_waypoint = 0
+        self.target_brake = 0.0
         self.curr_v = 0
 
         self.steer = 0
@@ -46,6 +47,7 @@ class RVizVisualization:
     
     def vision_warn(self,msg):
         self.vision = msg.data
+
 
     def steer_callback(self,msg):
         self.steer = msg.data
@@ -65,9 +67,10 @@ class RVizVisualization:
         self.current_point.y = msg.pose.position.y 
 
     def actuator_callback(self, msg):
-        self.target_accel = msg.x
-        self.target_steer = msg.y / 12
-        self.target_waypoint = msg.z
+        self.target_accel = msg.accel
+        self.target_steer = msg.steer / 12
+        self.target_waypoint = msg.is_waypoint
+        self.target_brake = msg.brake
 
     def publish_markers(self):
         # Publish point marker
@@ -241,6 +244,7 @@ class RVizVisualization:
             f"Real Steering wheel angle [deg]: {self.steer:.2f}\n"
             f"Current velocity [m/s]: {self.curr_v:.2f}\n"
             f"Current velocity [km/h]: {self.curr_v*3.6:.2f}\n"
+            f"Brake [%]: {self.target_brake: .2f}\n"
             f"{'Obstacle Detect!' if self.lidar else 'Obstacle Clear'}\n"
             f"{'Sign Detect!' if self.vision else 'Sign Clear'}"
         )

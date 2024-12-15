@@ -4,9 +4,22 @@ project(vehicle_control)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
+  message_generation
 )
 
-catkin_package()
+add_message_files(
+  FILES
+  Actuator.msg
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
+
+catkin_package(
+  CATKIN_DEPENDS message_runtime std_msgs
+)
 
 catkin_install_python(PROGRAMS
   start_code/run_setting.py

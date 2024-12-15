@@ -400,8 +400,6 @@ class PathTracker:
             self.global_wp_pub.publish(marker)
             self.waypoint.pop(closest_idx)
             rospy.loginfo("Pop global waypoint")
-            if len(self.waypoint) == 0:
-            	self.waypoint = self.store_waypoints
 
     def run_setting_loop(self):
         rate = rospy.Rate(20)  # 20 Hz
@@ -410,6 +408,9 @@ class PathTracker:
             local_y = self.pose_stamped.pose.position.y
 
             if self.curr_lat is not None and self.curr_lon is not None and self.initial_pose and self.initial_gps:
+                if len(self.waypoint) == 0:
+                    self.waypoint = self.store_waypoints
+                    rospy.loginfo("Waypoint Repair!!")
                 self.start_flga_pub.publish(True)
                 allwaypoint = self.transform_waypoints_to_odom()
                 way = [self.curr_lat,self.curr_lon]

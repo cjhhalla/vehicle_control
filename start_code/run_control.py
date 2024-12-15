@@ -14,7 +14,7 @@ from geopy.distance import geodesic
 from geometry_msgs.msg import Vector3
 from novatel_oem7_msgs.msg import BESTGNSSPOS
 from collections import deque
-
+from vehicle_control.msg import Actuator
 
 waypoints = [
     ## 0
@@ -192,12 +192,13 @@ class Start:
         self.rl_sub = rospy.Subscriber('/vehicle/velocity_RL', Float32, self.rl_callback)
         self.rr_sub = rospy.Subscriber('/vehicle/velocity_RR', Float32, self.rr_callback)
         self.steer_sub = rospy.Subscriber('/vehicle/steering_angle', Float32, self.steer_callback)
-        self.actuator_pub = rospy.Publisher('/target_actuator', Vector3, queue_size=10)
+        self.actuator_pub = rospy.Publisher('/target_actuator', Actuator, queue_size=10)
         self.light_pub = rospy.Publisher('/vehicle/left_signal', Float32, queue_size =10)
         self.global_odom_pub = rospy.Publisher('/global_odom_frame_point',Marker,queue_size=10)
         self.laps_complete_pub = rospy.Publisher('/laps_completed',Bool,queue_size=10)
-        self.cross_pub = rospy.Publisher('/mobinha/is_crossroad',Bool, queue_size = 10)
-
+        
+        self.obstacle_sub = rospy.Subscriber('/mobinha/hazard_warning',Bool,self.obstacle_cb)
+        self.sign_sub = rospy.Subscriber('/mobinha/is_crossroad',Bool, self.sign_cb)
 
         self.curr_v = 0
         self.pose = PoseStamped()
@@ -225,8 +226,14 @@ class Start:
         self.curr_steer = 0
         self.inter_steer = 0
 
-        self.cross_zero = False
-        self.cross_six = False
+        self.obstacle_flag = False
+        self.sign_flag = False
+
+    def obstacle_cb(self,msg):
+        self.obstacle_flag = msg.data
+    
+    def sign_cb(self,msg):
+        self.sign_flag = msg.data
 
     def steer_callback(self,msg):
         self.curr_steer = msg.data
@@ -390,8 +397,28 @@ class Start:
                 continue
 
             waypoint_sec = self.find_waypoint_section(self.curr_lat, self.curr_lon, waypoint_sections)
-
             self.curr_v = (self.rl_v + self.rr_v)/7.2
+
+            if self.obstacle_flag:
+                temp = Actuator()
+                temp.accel = 0
+                temp.brake = np.clip(100 / max(self.curr_v, 0.1), 0, 100)
+                temp.brake = 0
+                temp.is_waypoint = 0
+                self.actuator_pub.publish(temp)
+                self.obstacle_flag = False
+                continue
+
+            if self.sign_flag and waypoint_sec != 6:
+                temp = Actuator()
+                temp.accel = 0
+                temp.brake = np.clip(100 / max(self.curr_v*3.6, 0.1), 0, 15)
+                temp.brake = 0
+                temp.is_waypoint = 0
+                self.actuator_pub.publish(temp)
+                self.sign_flag = False
+                continue
+
             if  self.global_pose_x is not None and self.global_pose_y is not None and self.global_waypoints_x is not None and self.global_waypoints_y is not None and waypoint_sec != -1:
                 waypoint_x = self.global_waypoints_x
                 waypoint_y = self.global_waypoints_y
@@ -421,10 +448,11 @@ class Start:
                     steer_interpolate = np.linspace(self.inter_steer, steer, 10)
 
                     for s in steer_interpolate:
-                        temp = Vector3()
-                        temp.x = accel / 150
-                        temp.y = s
-                        temp.z = 0
+                        temp = Actuator()
+                        temp.accel = accel / 2
+                        temp.steer = s
+                        temp.brake = 0
+                        temp.is_waypoint = 0
                         rospy.loginfo("Using Global Waypoint")
                         rospy.loginfo(f"accel value: {accel}")
                         rospy.loginfo(f"steer value: {steer}")
@@ -436,14 +464,16 @@ class Start:
                     self.global_waypoints_y = None
                     continue    
                 else:
-                    steer = target_steering * self.steer_ratio / 10 
+                    steer = target_steering * self.steer_ratio / 9 
                 rospy.loginfo("Using Global Waypoint")
                 rospy.loginfo(f"accel value: {accel}")
                 rospy.loginfo(f"steer value: {steer}")
-                temp = Vector3()
-                temp.x = accel
-                temp.y = steer
-                temp.z = 0
+
+                temp = Actuator()
+                temp.accel = accel
+                temp.steer = steer
+                temp.brake = 0
+                temp.is_waypoint = 0
 
                 self.actuator_pub.publish(temp)
                 
@@ -468,10 +498,12 @@ class Start:
                 accel = throttle
                 steer = target_steering * self.steer_ratio
 
-                temp = Vector3()
-                temp.x = accel
-                temp.y = steer
-                temp.z = 1
+                temp = Actuator()
+                temp.accel = accel
+                temp.steer = steer
+                temp.brake = 0
+                temp.is_waypoint = 1
+
                 rospy.loginfo("Using Local Waypoint")
                 rospy.loginfo(f"accel value: {accel}")
                 rospy.loginfo(f"steer value: {steer}")

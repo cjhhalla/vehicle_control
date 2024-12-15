@@ -9,7 +9,9 @@ import sys
 from std_msgs.msg import Float32, Int32, Bool, String
 from morai_msgs.msg import CtrlCmd
 from geometry_msgs.msg import Vector3
+from vehicle_control.msg import Actuator
 import rospkg
+
 def alive_counter(alv_cnt):
     return (alv_cnt + 1) % 256
 
@@ -125,15 +127,12 @@ class IONIQ:
         self.pub_safety_status = rospy.Publisher('/vehicle/safety_status', Int32, queue_size=10)
         self.pub_alv_cnt_err = rospy.Publisher('/vehicle/alv_cnt_err', Bool, queue_size=10)
 
-        self.sub_actuator = rospy.Subscriber('/target_actuator', Vector3, self.actu_cb)
+        self.sub_actuator = rospy.Subscriber('/target_actuator', Actuator, self.actu_cb)
 
         rospy.Subscriber('/vehicle/left_signal', Float32, self.light_cb)
-    
-        rospy.Subscriber('/mobinha/hazard_warning', Bool, self.obstacle_cb)
 
         rospy.Subscriber('/laps_completed',Bool, self.laps_cb)
 
-        rospy.Subscriber('/mobinha/is_crossroad',Bool, self.cross_cb)
 
         self.light_left = 0
         self.light_right = 0
@@ -142,25 +141,18 @@ class IONIQ:
         self.is_obstacle = False
         self.is_finish = False
         self.is_crossroad = False
-        self.rate = rospy.Rate(100)
-        
-    def cross_cb(self,msg):
-        self.is_crossroad = msg.data
+        self.rate = rospy.Rate(10)
 
     def laps_cb(self,msg):
         self.is_finish = msg.data
-
-    def obstacle_cb(self,msg):
-        self.is_obstacle = msg.data
-        if(self.is_obstacle):
-            rospy.logwarn("Warning!! Vehicle in Hazard!")
 
     def light_cb(self,msg):
         self.light_left = msg.data
 
     def actu_cb(self,msg):
-        self.accel = msg.x
-        self.steer = msg.y
+        self.accel = msg.accel
+        self.steer = msg.steer
+        self.brake = msg.brake
 
     def daemon(self):
         while not rospy.is_shutdown():
@@ -180,53 +172,11 @@ class IONIQ:
 
     def longitudinal_cmd(self):
         self.alv_cnt = alive_counter(self.alv_cnt)
-        if(self.is_obstacle):
-        
-            rospy.logwarn("Obstacle! Hazard Detect!")
-            signals = {'PA_Enable': self.PA_enable, 'PA_StrAngCmd': self.steer,
-                        'LON_Enable': self.LON_enable, 'Target_Brake': 30, 'Target_Accel': 0, 
-                        'Alive_cnt': self.alv_cnt, 'Reset_Flag': self.reset,
-                        'TURN_SIG_LEFT': self.light_left, 'TURN_SIG_RIGHT': self.light_right
-                        }
-            msg = self.db.encode_message('Control', signals)
-            self.sender(0x210, msg)
-            self.rate.sleep()
-            rospy.logwarn("Obstacle! Hazard Detect!")
-            signals = {'PA_Enable': self.PA_enable, 'PA_StrAngCmd': self.steer,
-                        'LON_Enable': self.LON_enable, 'Target_Brake': 60, 'Target_Accel': 0, 
-                        'Alive_cnt': self.alv_cnt, 'Reset_Flag': self.reset,
-                        'TURN_SIG_LEFT': self.light_left, 'TURN_SIG_RIGHT': self.light_right
-                        }
-            msg = self.db.encode_message('Control', signals)
-            self.sender(0x210, msg)
-            self.rate.sleep()
-            rospy.logwarn("Obstacle! Hazard Detect!")
-            signals = {'PA_Enable': self.PA_enable, 'PA_StrAngCmd': self.steer,
-                        'LON_Enable': self.LON_enable, 'Target_Brake': 30, 'Target_Accel': 0, 
-                        'Alive_cnt': self.alv_cnt, 'Reset_Flag': self.reset,
-                        'TURN_SIG_LEFT': self.light_left, 'TURN_SIG_RIGHT': self.light_right
-                        }
-            msg = self.db.encode_message('Control', signals)
-            self.sender(0x210, msg)
-            return
-
-        if(self.is_crossroad):
-            rospy.logwarn("Now Vehicle on Crossroad!")
-            signals = {'PA_Enable': self.PA_enable, 'PA_StrAngCmd': self.steer,
-                        'LON_Enable': self.LON_enable, 'Target_Brake': 0, 'Target_Accel': 0, 
-                        'Alive_cnt': self.alv_cnt, 'Reset_Flag': self.reset,
-                        'TURN_SIG_LEFT': self.light_left, 'TURN_SIG_RIGHT': self.light_right
-                        }
-            msg = self.db.encode_message('Control', signals)
-            self.sender(0x210, msg)
-            return
-
         signals = {'PA_Enable': self.PA_enable, 'PA_StrAngCmd': self.steer,
                    'LON_Enable': self.LON_enable, 'Target_Brake': self.brake, 'Target_Accel': self.accel, 
                    'Alive_cnt': self.alv_cnt, 'Reset_Flag': self.reset,
                    'TURN_SIG_LEFT': self.light_left, 'TURN_SIG_RIGHT': self.light_right
                    }
-
         msg = self.db.encode_message('Control', signals)
         self.sender(0x210, msg)
 
