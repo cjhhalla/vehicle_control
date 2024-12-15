@@ -403,20 +403,21 @@ class Start:
                 temp = Actuator()
                 temp.accel = 0
                 temp.brake = np.clip(100 / max(self.curr_v, 0.1), 0, 100)
-                temp.brake = 0
                 temp.is_waypoint = 0
                 self.actuator_pub.publish(temp)
                 self.obstacle_flag = False
+                rospy.logwarn("Obstacle detect, Command brake")
                 continue
 
             if self.sign_flag and waypoint_sec != 6:
                 temp = Actuator()
                 temp.accel = 0
-                temp.brake = np.clip(100 / max(self.curr_v*3.6, 0.1), 0, 15)
-                temp.brake = 0
+                temp.brake = np.clip(100 / max(self.curr_v*3.6, 0.1), 0, 10)
                 temp.is_waypoint = 0
                 self.actuator_pub.publish(temp)
-                self.sign_flag = False
+                rospy.logwarn("Sign detect, Command slow")
+                for i in range(10):
+                    rate.sleep()
                 continue
 
             if  self.global_pose_x is not None and self.global_pose_y is not None and self.global_waypoints_x is not None and self.global_waypoints_y is not None and waypoint_sec != -1:
@@ -515,7 +516,7 @@ class Start:
                 self.light_pub.publish(light) 
 
             else:
-                rospy.logwarn("No waypoints or current_point available. Skipping loop.")
+                # rospy.logwarn("No waypoints or current_point available. Skipping loop.")
                 rate.sleep()
                 continue
 

@@ -153,6 +153,7 @@ class IONIQ:
         self.accel = msg.accel
         self.steer = msg.steer
         self.brake = msg.brake
+        print(self.brake)
 
     def daemon(self):
         while not rospy.is_shutdown():

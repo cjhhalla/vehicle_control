@@ -17,7 +17,7 @@ from novatel_oem7_msgs.msg import BESTGNSSPOS
 class PathTracker:
     def __init__(self, waypoints):
         self.waypoint = waypoints
-        self.store_waypoint = waypoints
+        self.store_waypoints = waypoints
         self.marker_pub = rospy.Publisher('/ego_waypoint', Marker, queue_size=10)
         self.marker_gps_pub = rospy.Publisher('/ego_gps_waypoint', Marker, queue_size=10)
         self.point_gps_pub = rospy.Publisher('/point_globak_waypoint', Point, queue_size=10)
