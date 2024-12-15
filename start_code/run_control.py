@@ -265,7 +265,7 @@ class Start:
 
     def point_callback(self,msg):
         self.current_point = Point()
-        self.current_point.x = msg.pose.position.x + 0.6
+        self.current_point.x = msg.pose.position.x + 2.1
         self.current_point.y = msg.pose.position.y + 0.2
 
         # self.point_history_x.append(self.current_point.x)
@@ -322,7 +322,7 @@ class Start:
                 return idx
         return None
 
-    def find_waypoint_section(self, curr_lat, curr_lon, sections, threshold=7, exit_distance=2):
+    def find_waypoint_section(self, curr_lat, curr_lon, sections, threshold=7, exit_distance=3.5):
         
         curr_position = (curr_lat, curr_lon)
 

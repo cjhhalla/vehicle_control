@@ -142,6 +142,7 @@ class IONIQ:
         self.is_obstacle = False
         self.is_finish = False
         self.is_crossroad = False
+        self.rate = rospy.Rate(100)
         
     def cross_cb(self,msg):
         self.is_crossroad = msg.data
@@ -173,69 +174,53 @@ class IONIQ:
             # lat
             if self.steering_overide:
                 self.PA_enable = 0
-
+            self.rate.sleep()
     def reset_trigger(self):
         self.reset = 1
 
     def longitudinal_cmd(self):
+        self.alv_cnt = alive_counter(self.alv_cnt)
         if(self.is_obstacle):
-            self.brake = 30
-            self.accel = 0
+        
             rospy.logwarn("Obstacle! Hazard Detect!")
             signals = {'PA_Enable': self.PA_enable, 'PA_StrAngCmd': self.steer,
-                        'LON_Enable': self.LON_enable, 'Target_Brake': self.brake, 'Target_Accel': self.accel, 
+                        'LON_Enable': self.LON_enable, 'Target_Brake': 30, 'Target_Accel': 0, 
                         'Alive_cnt': self.alv_cnt, 'Reset_Flag': self.reset,
                         'TURN_SIG_LEFT': self.light_left, 'TURN_SIG_RIGHT': self.light_right
                         }
             msg = self.db.encode_message('Control', signals)
             self.sender(0x210, msg)
-            time.sleep(0.05)
-            self.brake = 60
-            self.accel = 0
+            self.rate.sleep()
             rospy.logwarn("Obstacle! Hazard Detect!")
             signals = {'PA_Enable': self.PA_enable, 'PA_StrAngCmd': self.steer,
-                        'LON_Enable': self.LON_enable, 'Target_Brake': self.brake, 'Target_Accel': self.accel, 
+                        'LON_Enable': self.LON_enable, 'Target_Brake': 60, 'Target_Accel': 0, 
                         'Alive_cnt': self.alv_cnt, 'Reset_Flag': self.reset,
                         'TURN_SIG_LEFT': self.light_left, 'TURN_SIG_RIGHT': self.light_right
                         }
             msg = self.db.encode_message('Control', signals)
             self.sender(0x210, msg)
-        else:
-            self.brake = 0
-            self.is_obstacle = False
-
-        if(self.is_finish):
-            for i in range(70):
-                self.brake = i 
-                self.steer = 0
-                self.accel = 0
-                self.alv_cnt = alive_counter(self.alv_cnt)
-                
-                signals = {'PA_Enable': self.PA_enable, 'PA_StrAngCmd': self.steer,
-                        'LON_Enable': self.LON_enable, 'Target_Brake': self.brake, 'Target_Accel': self.accel, 
+            self.rate.sleep()
+            rospy.logwarn("Obstacle! Hazard Detect!")
+            signals = {'PA_Enable': self.PA_enable, 'PA_StrAngCmd': self.steer,
+                        'LON_Enable': self.LON_enable, 'Target_Brake': 30, 'Target_Accel': 0, 
                         'Alive_cnt': self.alv_cnt, 'Reset_Flag': self.reset,
                         'TURN_SIG_LEFT': self.light_left, 'TURN_SIG_RIGHT': self.light_right
                         }
-                                
-                msg = self.db.encode_message('Control', signals)
-                self.sender(0x210, msg)
-                time.sleep(0.03)
-
-            self.PA_enable = 0
-            self.LON_enable = 0
-        else:
-            self.brake = 0
-            self.is_finish = False
+            msg = self.db.encode_message('Control', signals)
+            self.sender(0x210, msg)
+            return
 
         if(self.is_crossroad):
-            self.brake = 30
-            self.accel = 0
             rospy.logwarn("Now Vehicle on Crossroad!")
-        else:
-            self.brake = 0
-            self.is_crossroad = False
+            signals = {'PA_Enable': self.PA_enable, 'PA_StrAngCmd': self.steer,
+                        'LON_Enable': self.LON_enable, 'Target_Brake': 0, 'Target_Accel': 0, 
+                        'Alive_cnt': self.alv_cnt, 'Reset_Flag': self.reset,
+                        'TURN_SIG_LEFT': self.light_left, 'TURN_SIG_RIGHT': self.light_right
+                        }
+            msg = self.db.encode_message('Control', signals)
+            self.sender(0x210, msg)
+            return
 
-        self.alv_cnt = alive_counter(self.alv_cnt)
         signals = {'PA_Enable': self.PA_enable, 'PA_StrAngCmd': self.steer,
                    'LON_Enable': self.LON_enable, 'Target_Brake': self.brake, 'Target_Accel': self.accel, 
                    'Alive_cnt': self.alv_cnt, 'Reset_Flag': self.reset,
@@ -244,8 +229,6 @@ class IONIQ:
 
         msg = self.db.encode_message('Control', signals)
         self.sender(0x210, msg)
-
-        
 
     def longitudinal_rcv(self):
         data = self.bus.recv()
