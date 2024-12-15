@@ -463,7 +463,8 @@ class Start:
                 target_steering, target_position = self.pure_pursuit.run(self.curr_v, waypoint, position, 0 ,self.curr_steer)
                 
                 throttle = self.pid.run(target_position, position)
-                throttle = np.clip(throttle,0,10)
+                throttle *= 1.7
+                throttle = np.clip(throttle,0,20)
                 accel = throttle
                 steer = target_steering * self.steer_ratio
 
