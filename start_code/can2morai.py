@@ -141,7 +141,6 @@ class IONIQ:
         self.is_obstacle = False
         self.is_finish = False
         self.is_crossroad = False
-        self.rate = rospy.Rate(10)
 
     def laps_cb(self,msg):
         self.is_finish = msg.data
@@ -153,7 +152,6 @@ class IONIQ:
         self.accel = msg.accel
         self.steer = msg.steer
         self.brake = msg.brake
-        print(self.brake)
 
     def daemon(self):
         while not rospy.is_shutdown():
@@ -167,7 +165,6 @@ class IONIQ:
             # lat
             if self.steering_overide:
                 self.PA_enable = 0
-            self.rate.sleep()
     def reset_trigger(self):
         self.reset = 1
 

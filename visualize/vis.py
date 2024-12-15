@@ -75,22 +75,14 @@ class RVizVisualization:
     def publish_markers(self):
         # Publish point marker
 
-        # Publish heading marker
         self.publish_heading_marker()
         self.curr_v = (self.rl_v + self.rr_v)/7.2
         self.publish_text_marker()
-        # Publish text markers
-        # if self.target_waypoint == 0:
-        #     self.publish_text_marker("GPS MODE", 0, 4, 3, marker_id=1)
-        #     self.publish_global_point_marker()
-        # elif self.target_waypoint == 1:
-        #     self.publish_text_marker("VISION MODE", 0, 4, 3, marker_id=1)
-        #     self.publish_point_marker()
-        # self.publish_text_marker(f"Actuator [%]: {self.target_accel: f}",0, 4, 4, marker_id = 2)
-        # self.publish_text_marker(f"Steering angle [deg]: {self.target_steer:.2f}", 0, 4, 5, marker_id=3)
-        # self.publish_text_marker(f"Steering wheel angle [deg]: {self.target_steer * 12:.2f}", 0, 4, 6, marker_id=4)
-        # self.publish_text_marker(f"Real Steering wheel angle [deg]: {self.steer:.2f}", 0, 4, 7, marker_id=5)
-        # self.publish_text_marker(f"current velocity [m/s]: {self.curr_v:.2f}", 0, 4, 8, marker_id=6)
+
+        if self.target_waypoint == 0:
+            self.publish_global_point_marker()
+        elif self.target_waypoint == 1:
+            self.publish_point_marker()
         
 
     def publish_point_marker(self):
@@ -228,9 +220,9 @@ class RVizVisualization:
         overlay_text = OverlayText()
         overlay_text.action = OverlayText.ADD
         overlay_text.width = 450  # 오버레이 텍스트 너비
-        overlay_text.height = 200  # 오버레이 텍스트 높이
+        overlay_text.height = 230  # 오버레이 텍스트 높이
         overlay_text.left = 10   # x 위치 조정
-        overlay_text.top = 250  # y 위치 조정
+        overlay_text.top = 200  # y 위치 조정
         overlay_text.text_size = 14  # 글씨 크기
         overlay_text.line_width = 2  # 글씨 외곽선 두께
         overlay_text.font = "DejaVu Sans Mono"

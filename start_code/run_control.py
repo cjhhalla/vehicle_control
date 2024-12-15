@@ -450,7 +450,7 @@ class Start:
 
                     for s in steer_interpolate:
                         temp = Actuator()
-                        temp.accel = accel / 2
+                        temp.accel = accel / 5
                         temp.steer = s
                         temp.brake = 0
                         temp.is_waypoint = 0
@@ -494,7 +494,7 @@ class Start:
                 target_steering, target_position = self.pure_pursuit.run(self.curr_v, waypoint, position, 0 ,self.curr_steer)
                 
                 throttle = self.pid.run(target_position, position)
-                throttle *= 1.7
+                throttle *= 1.5
                 throttle = np.clip(throttle,0,20)
                 accel = throttle
                 steer = target_steering * self.steer_ratio
