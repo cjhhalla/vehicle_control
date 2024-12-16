@@ -165,6 +165,7 @@ class IONIQ:
             # lat
             if self.steering_overide:
                 self.PA_enable = 0
+                
     def reset_trigger(self):
         self.reset = 1
 

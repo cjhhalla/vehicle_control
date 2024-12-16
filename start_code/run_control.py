@@ -439,7 +439,7 @@ class Start:
                 throttle = np.clip(throttle,0,10)
                 accel = throttle
 
-                if waypoint_sec == 6:
+                if waypoint_sec == 6 or waypoint_sec == 5 or waypoint_sec == 4:
                     light = Float32()
                     light.data = 1
                     self.light_pub.publish(light)   
@@ -450,7 +450,7 @@ class Start:
 
                     for s in steer_interpolate:
                         temp = Actuator()
-                        temp.accel = accel / 5
+                        temp.accel = accel / 10
                         temp.steer = s
                         temp.brake = 0
                         temp.is_waypoint = 0
