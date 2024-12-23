@@ -1,23 +1,35 @@
-run_setting.py - initialize local frame and processing ros topic
-run_control.py - control input generation
-sim_data.bag - simulation for test code
-visualize/vis.py - text and point visualization
-rviz/local_frame.rviz - local vehicle frame rviz
-rviz/visual.rviz - global vehicle frame rviz
+# Project README
 
+## 📂 File Structure
+The main files and directories in this project and their roles are as follows:
 
+- **`run_setting.py`**:  
+  Initializes the local frame and configures ROS topic processing.
 
+- **`run_control.py`**:  
+  Generates input control signals.
 
-Start Line
+- **`sim_data.bag`**:  
+  Simulation data file for running test codes.
 
-Have to run novatel (GNSS)
-./can.sh (CAN connect)
+- **`visualize/vis.py`**:  
+  Visualizes text and point data.
 
-/start_code/can2morai.py 
+- **`rviz/local_frame.rviz`**:  
+  RViz configuration file for the local vehicle frame.
 
-77 -> autonomous mode
-1001 -> reset processing
+- **`rviz/visual.rviz`**:  
+  RViz configuration file for the global vehicle frame.
 
-roslaunch setting.launch
+---
 
+## 🚀 Getting Started
 
+### 1. **Initial Setup**
+Run the following command to initialize the required settings:
+```bash
+./can.sh
+This command sets up the connection between NovAtel GNSS and CAN.
+
+### 2. **Running the Code**
+Follow these steps to execute the project
